@@ -36,6 +36,8 @@ myLib.mkHomeModule {
           # System dependencies often needed for building crates
           pkg-config
           openssl
+
+          rustlings
         ]
         ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ]
         ++ cargo-plugins;

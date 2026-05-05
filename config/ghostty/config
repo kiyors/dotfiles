@@ -31,13 +31,21 @@ window-padding-y = 8
 window-padding-color = extend-always
 
 # Font Settings
-font-family = JetBrainsMono Nerd Font
+font-family = Cartograph CF
 window-title-font-family = "0xProto Nerd Font Mono"
 font-style = default
 font-style-bold = default
 font-style-italic = default
-font-style-bold-italic = default
+font-style-bold-italic = "Cartograph CF Bold Italic"
 font-synthetic-style = bold,italic,bold-italic
+# Something similar with JetBrainsMono Nerd Font
+# font-family = JetBrainsMono Nerd Font
+# window-title-font-family = "0xProto Nerd Font Mono"
+# font-style = default
+# font-style-bold = default
+# font-style-italic = default
+# font-style-bold-italic = default
+# font-synthetic-style = bold,italic,bold-italic
 font-size = 14
 font-thicken = true
 grapheme-width-method = unicode

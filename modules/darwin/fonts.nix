@@ -13,6 +13,7 @@ lib.mkModule {
       packages = with pkgs; [
         roboto
         work-sans
+        cantarell-fonts
         comic-neue
         inter
         lato

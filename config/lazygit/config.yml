@@ -29,6 +29,17 @@ gui:
 os:
   editPreset: "nvim"
 
+customCommands:
+  - key: "<c-space>"
+    context: "global"
+    command: "git open"
+    description: "Open repo in github"
+
+  - key: "<c-g>"
+    context: "files"
+    command: "git commit --amend --no-edit"
+    description: "commit without changes"
+
 theme:
   activeBorderColor:
     - "#cba6f7"

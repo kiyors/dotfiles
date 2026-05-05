@@ -66,14 +66,11 @@ myLib.mkHomeModule {
         ":"
         "${lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ]}"
       ];
-
-      plugins = [
-        pkgs.vimPlugins.nvim-treesitter.withAllGrammars
-      ];
     };
 
     # Disable HM-managed init.lua to allow symlinking the whole nvim directory
     xdg.configFile."nvim/init.lua".enable = lib.mkForce false;
-    xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/nvim";
+    xdg.configFile."nvim".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/nvim";
   };
 }

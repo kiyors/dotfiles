@@ -24,21 +24,26 @@
           enable = true;
           user = "gaurav";
           autoMigrate = true;
+          onActivation = {
+            # autoUpdate = false;
+            cleanup = "uninstall"; # Genuine declarative cleanup: remove from config = remove from system
+            upgrade = true;
+          };
           package = inputs.nix-nanobrew.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
           # Declarative package lists hardcoded in the module
           casks = [
             "iina"
             "blip"
-            "bruno"
-            "motrix"
+            # "bruno"
+            # "motrix"
             "raycast"
             "spotify"
             "obsidian"
             "antigravity"
-            "google-drive"
+            # "google-drive"
             "google-chrome"
-            "brave-browser"
+            # "brave-browser"
             # "helium-browser"
             "keyboardcleantool"
             # "netbirdio/tap/netbird-ui"

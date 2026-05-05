@@ -17,8 +17,8 @@
   modules = {
     common.packages.enable = true;
     darwin = {
-      homebrew.enable = false;
-      nanobrew.enable = true;
+      homebrew.enable = true;
+      nanobrew.enable = false;
       settings.enable = true;
       packages.enable = true;
       fonts.enable = true;
@@ -35,6 +35,10 @@
     # pkgs.nushell
     pkgs.zsh
   ];
+
+  # system.applications = with pkgs; [
+  #   superCmd
+  # ];
 
   users.users.gaurav = {
     uid = 501;
