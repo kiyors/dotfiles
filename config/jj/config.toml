@@ -1,0 +1,46 @@
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+
+[user]
+email = "gaurav23617@gmail.com"
+name  = "kiyors"
+
+[signing]
+# Mapped from commit.gpgsign, gpg.format = ssh, and user.signingkey
+backend  = "ssh"
+behavior = "own"
+key      = "~/.ssh/key.pub"
+
+[ui]
+editor = "nvim"
+pager  = "delta"
+
+# Optional but recommended for Delta:
+# jj has its own native colorized word-diff, which can sometimes confuse Delta.
+# Forcing the standard git format ensures Delta parses and styles everything correctly.
+diff.format = "git"
+
+# Since you're using nvim, this sets it up for conflict resolution
+merge-editor = "vimdiff"
+
+# Make typing just `jj` default to the log view
+default-command = "log"
+
+[aliases]
+# Quick Shortcuts
+b = [ "bookmark" ]
+d = [ "diff" ]
+n = [ "new" ]
+s = [ "st" ]
+
+# Typo Forgiveness
+des   = [ "desc" ]
+dif   = [ "diff" ]
+difff = [ "diff" ]
+dsc   = [ "desc" ]
+quash = [ "squash" ]
+
+# Pulls the closest bookmark up to your current working commit
+tug = [ "bookmark", "move", "--from", "closest_bookmark(@-)", "--to", "@-" ]
+
+[revset-aliases]
+"closest_bookmark(x)" = "heads(bookmarks() & ::x)"

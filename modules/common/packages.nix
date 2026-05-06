@@ -30,6 +30,7 @@ lib.mkModule {
       just
       cargo
       nixd
+      taplo
       rustc
       pnpm
     ];

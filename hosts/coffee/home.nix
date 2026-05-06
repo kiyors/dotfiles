@@ -48,7 +48,10 @@
     mpv.enable = false;
   };
 
-  versionControl.git.enable = true;
+  versionControl = {
+    git.enable = true;
+    # jujutsu.enable = false;
+  };
   secrets.sops.enable = true;
 
   wm.aerospace.enable = true;

@@ -7,7 +7,7 @@
 }:
 myLib.mkHomeModule {
   globalConfig = config;
-  name = "versionControl.git.jj";
+  name = "versionControl.jujutsu";
   description = "Enable Jujutsu (jj) version control system";
   enableDefault = config.versionControl.git.enable;
   config = {
@@ -15,15 +15,14 @@ myLib.mkHomeModule {
       jujutsu
       jjui
     ];
+
     programs.jujutsu = {
       enable = true;
       package = pkgs.jujutsu;
-
-      # Full options:
-      # https://github.com/martinvonz/jj/blob/main/docs/config.md
-      # settings = {
-      #   inherit (config.programs.git.settings) user;
-      # };
+      # We intentionally leave `settings` out/empty so Home Manager
+      # doesn't try to generate its own config.toml file.
     };
+    home.file.".config/jj".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/jj";
   };
 }

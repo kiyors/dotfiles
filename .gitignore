@@ -10,3 +10,4 @@ result-*
 [Bb]ackup/*
 .agents
 skills-lock.json
+.cache/
