@@ -7,8 +7,28 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "diff_view_style": "unified",
+  "agent_servers": {
+    "gemini": {
+      "type": "registry"
+    }
+  },
+  "outline_panel": {
+    "dock": "left",
+  },
+  "collaboration_panel": {
+    "dock": "left",
+  },
+  "agent": {
+    "dock": "left",
+    "favorite_models": [],
+    "model_parameters": [],
+  },
+  "git_panel": {
+    "dock": "right",
+  },
   "project_panel": {
-    "dock": "right"
+    "dock": "right",
   },
   "vim_mode": true,
   "icon_theme": "Catppuccin Mocha",
@@ -17,11 +37,31 @@
   "theme": {
     "mode": "system",
     "light": "One Light",
-    "dark": "One Dark Pro"
+    "dark": "Catppuccin Frappé",
+  },
+  "auto_install_extensions": {
+    "biome": true,
+    "catppuccin-icons": true,
+    "dockerfile": true,
+    "git-firefly": true,
+    "go-snippets": true,
+    "html": true,
+    "html-snippets": true,
+    "lua": true,
+    "nextjs-react-snippets": true,
+    "nix": true,
+    "prisma": true,
+    "react-snippets": true,
+    "react-typescript-snippets": true,
+    "rust-snippets": true,
+    "sql": true,
+    "terraform": true,
+    "toml": true,
+    "zig": true,
   },
   "languages": {
     "Nix": {
-      "language_servers": ["nixd", "!nil"]
-    }
-  }
+      "language_servers": ["nixd", "!nil"],
+    },
+  },
 }

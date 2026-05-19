@@ -10,16 +10,20 @@
     "context": "Workspace",
     "bindings": {
       // "shift shift": "file_finder::Toggle"
-    }
+    },
   },
   {
     "context": "Editor && vim_mode == insert",
     "bindings": {
       "j k": "vim::NormalBefore",
-      "j j": "vim::NormalBefore",
+    },
+  },
+  {
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      "space w": "workspace::Save",
       "space space": "file_finder::Toggle",
-      "space w": "workspace::Save"
-    }
+    },
   },
   {
     "context": "Editor && (showing_code_actions || showing_completions)",
@@ -29,20 +33,20 @@
       "ctrl-j": "editor::ContextMenuNext",
       "down": "editor::ContextMenuNext",
       "pageup": "editor::ContextMenuFirst",
-      "pagedown": "editor::ContextMenuLast"
-    }
+      "pagedown": "editor::ContextMenuLast",
+    },
   },
   {
-    "context": "Workspace",
+    "context": "Workspace && vim_mode == normal",
     "bindings": {
-      "space space": "file_finder::Toggle"
+      "space space": "file_finder::Toggle",
       // "space e": "project_panel::ToggleFocus"
-    }
+    },
   },
 
   // --- START: Your Merged Neovim Keybindings ---
   {
-    "context": "Workspace",
+    "context": "Workspace && vim_mode == normal",
     "bindings": {
       "space .": "workspace::NewFile", // Toggle Scratch Buffer
       // "space n": "notifications::Toggle", // Notification History
@@ -93,7 +97,7 @@
       "space s v": "pane::SplitRight",
       "space s h": "pane::SplitDown",
       // "space s e": "pane::BalancePanes",
-      "space s x": "pane::CloseActiveItem" // Close split
+      "space s x": "pane::CloseActiveItem", // Close split
 
       // --- Increment / Decrement ---
       // "space =": "editor::Increment", // <leader>+
@@ -101,7 +105,7 @@
 
       // --- File Actions ---
       // "space c R": "workspace::Rename" // Snacks: Rename File
-    }
+    },
   },
   // Context for actions inside the text editor
   {
@@ -114,13 +118,13 @@
       // "X": "editor::SplitLine", // Split line at cursor
       // "enter": "editor::ChangeInsideWord", // Change word (ciw)
       // "ctrl-x": "editor::CutLine" // Cut line
-    }
+    },
   },
   // --- END: Your Merged Neovim Keybindings ---
   {
     "context": "(ProjectPanel && not_editing)",
     "bindings": {
-      "space e": "vim::ToggleProjectPanelFocus"
-    }
-  }
+      "space e": "vim::ToggleProjectPanelFocus",
+    },
+  },
 ]

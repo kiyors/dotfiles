@@ -10,6 +10,7 @@
   home.packages = with pkgs; [
     # spotiflac
     # spotidownloader
+    nyaa
   ];
 
   imports = [
@@ -25,7 +26,7 @@
   };
 
   editors = {
-    zed.enable = false;
+    zed.enable = true;
     neovim.enable = true;
   };
 

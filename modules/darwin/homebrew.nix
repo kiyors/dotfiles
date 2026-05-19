@@ -38,9 +38,10 @@
           };
         };
 
-        # 🚨 FIXED: Removed the broken `mas` bash commands from this block
+        # Activation scripts run as root, allowing native path manipulation
         system.activationScripts.preActivation.text = ''
           echo "━━━ Checking Prerequisites ━━━"
+
           # Check and install Xcode Command Line Tools
           if ! xcode-select -p &> /dev/null; then
             echo "Installing Xcode Command Line Tools..."
@@ -68,6 +69,23 @@
               echo "⚠️  Rosetta 2 installation failed. Run manually:"
               echo "   sudo softwareupdate --install-rosetta --agree-to-license"
             fi
+          fi
+
+          # Configure full Xcode path if it has finished downloading via Homebrew mas
+          if [ -d "/Applications/Xcode.app" ]; then
+            echo "Configuring Xcode developer directory..."
+            xcode-select --switch /Applications/Xcode.app/Contents/Developer
+            xcodebuild -license accept || true
+
+            # ⬇️ ADD THIS LINE HERE ⬇️
+            echo "Ensuring Metal Toolchain component is installed..."
+            xcodebuild -downloadComponent MetalToolchain || true
+
+            # Optional: Uncomment this to keep Xcode footprint minimal (~20GB savings)
+            # echo "Purging unneeded simulation runtimes..."
+            # rm -rf /Library/Developer/CoreSimulator/Profiles/Runtimes/*
+          else
+            echo "ℹ️  Xcode.app not found yet. It will be configured on the next switch after Homebrew finishes downloading it."
           fi
         '';
 
@@ -128,6 +146,7 @@
           # This declarative block takes over App Store duties perfectly
           masApps = {
             "WhatsApp Messenger" = 310633997;
+            "Xcode" = 497799835;
           };
         };
       };
