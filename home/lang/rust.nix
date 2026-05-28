@@ -6,7 +6,9 @@
   ...
 }:
 let
-  cargoHome = "${config.home.homeDirectory}/.cargo";
+  homeDir = config.home.homeDirectory;
+  cargoHome = "${homeDir}/.cargo";
+  sccacheDir = "${homeDir}/.cache/sccache";
   cargo-plugins = with pkgs; [
     cargo-sweep # Cleanup build artifacts
     cargo-edit # cargo add/rm/upgrade
@@ -15,6 +17,7 @@ let
     cargo-deny # dependency linter
     bacon # background checker
     cargo-generate # cargo, make me a project
+    sccache # shared compilation cache
   ];
 in
 myLib.mkHomeModule {
@@ -35,7 +38,10 @@ myLib.mkHomeModule {
 
           # System dependencies often needed for building crates
           pkg-config
+          wasm-pack
           openssl
+          cargo-shear
+          cargo-vet
 
           rustlings
         ]
@@ -45,6 +51,9 @@ myLib.mkHomeModule {
       sessionVariables = {
         CARGO_HOME = cargoHome;
         RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+        RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
+        SCCACHE_DIR = sccacheDir;
+        CARGO_INCREMENTAL = "0";
       };
 
       sessionPath = [ "${cargoHome}/bin" ];
@@ -59,6 +68,7 @@ myLib.mkHomeModule {
 
       activation.initRust = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         $DRY_RUN_CMD mkdir -p ${cargoHome}/bin
+        $DRY_RUN_CMD mkdir -p ${sccacheDir}
       '';
     };
   };

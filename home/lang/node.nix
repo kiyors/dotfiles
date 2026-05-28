@@ -6,7 +6,9 @@
   ...
 }:
 let
-  npmGlobalDir = "${config.home.homeDirectory}/.npm";
+  homeDir = config.home.homeDirectory;
+  npmGlobalDir = "${homeDir}/.npm";
+  pnpmHome = "${homeDir}/.local/share/pnpm";
 in
 myLib.mkHomeModule {
   globalConfig = config;
@@ -27,13 +29,18 @@ myLib.mkHomeModule {
       sessionVariables = {
         # Suppress experimental warnings (e.g., when using newer node features)
         NODE_OPTIONS = "--disable-warning=ExperimentalWarning";
+        PNPM_HOME = pnpmHome;
       };
 
-      sessionPath = [ "${npmGlobalDir}/bin" ];
+      sessionPath = [
+        "${npmGlobalDir}/bin"
+        pnpmHome
+      ];
 
-      # Ensure the global npm directories exist for manual 'npm install -g'
+      # Ensure the global npm/pnpm directories exist for manual global installs
       activation.initNode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         $DRY_RUN_CMD mkdir -p ${npmGlobalDir}/bin ${npmGlobalDir}/lib
+        $DRY_RUN_CMD mkdir -p ${pnpmHome}
       '';
 
       file = {
@@ -56,5 +63,7 @@ myLib.mkHomeModule {
         '';
       };
     };
+    home.file.".config/pnpm".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/pnpm";
   };
 }
