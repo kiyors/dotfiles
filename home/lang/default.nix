@@ -5,5 +5,6 @@
     ./node.nix
     ./rust.nix
     ./python.nix
+    ./php.nix
   ];
 }
