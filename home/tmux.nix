@@ -20,9 +20,13 @@ myLib.mkHomeModule {
       plugins = with pkgs.tmuxPlugins; [
         sessionist
       ];
-      # HM writes ~/.tmux.conf which just hands control to the symlinked config below.
-      extraConfig = ''source-file ~/.config/tmux/tmux.conf'';
     };
+
+    # HM 26.11's programs.tmux writes xdg.configFile."tmux/tmux.conf", which
+    # conflicts with the symlinked directory below. Disable it so our
+    # dotfiles-managed tmux.conf wins. Source the sessionist plugin manually
+    # (or via TPM) from within tmux.conf.
+    xdg.configFile."tmux/tmux.conf".enable = lib.mkForce false;
 
     home.file.".config/tmux".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/tmux";
