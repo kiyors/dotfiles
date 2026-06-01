@@ -6,5 +6,6 @@
     ./rust.nix
     ./python.nix
     ./php.nix
+    ./lua.nix
   ];
 }

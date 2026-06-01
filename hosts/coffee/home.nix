@@ -23,7 +23,7 @@
     rust.enable = true;
     node.enable = true;
     python.enable = true;
-    php.enable = true;
+    lua.enable = true;
   };
 
   editors = {
