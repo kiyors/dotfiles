@@ -26,6 +26,7 @@ source "$HOME/.config/zsh/catppuccin_mocha-zsh-syntax-highlighting.zsh"
 # Source config modules
 source "$HOME/.config/zsh/exports.zsh"
 source "$HOME/.config/zsh/aliases.zsh"
+source "$HOME/.config/zsh/Keybindings.zsh"
 source "$HOME/.config/zsh/functions.zsh"
 
 # Sheldon – plugin manager (cached: regenerates when lock file changes)
