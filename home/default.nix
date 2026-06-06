@@ -12,6 +12,11 @@
     ./shell
     ./lazydocker.nix
     ./ghostty.nix
+    ./hyprland.nix
+    ./vicinae.nix
+    ./waybar.nix
+    ./swaync.nix
+    ./swayosd.nix
     ./aerospace.nix
     ./mpv.nix
     ./spicetify.nix
