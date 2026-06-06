@@ -58,10 +58,13 @@
       url = "github:hyprwm/Hyprland";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    vicinae = {
-      url = "github:vicinaehq/vicinae";
+    vicinae.url = "github:vicinaehq/vicinae";
+    vicinae-extensions = {
+      url = "github:vicinaehq/extensions";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-hardware.url = "github:oxodx/nixos-hardware";
+    nixcord.url = "github:kaylorben/nixcord";
     betterfox = {
       url = "github:yokoffing/Betterfox";
       flake = false;
