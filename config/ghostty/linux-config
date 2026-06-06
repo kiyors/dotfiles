@@ -14,7 +14,7 @@ term = xterm-ghostty
 # Clipboard Settings
 clipboard-read = allow
 clipboard-write = allow
-copy-on-select = true
+copy-on-select = false
 clipboard-trim-trailing-spaces = true
 clipboard-paste-protection = true
 clipboard-paste-bracketed-safe = true
@@ -38,41 +38,25 @@ font-style-bold = default
 font-style-italic = default
 font-style-bold-italic = "Cartograph CF Bold Italic"
 font-synthetic-style = bold,italic,bold-italic
-# Something similar with JetBrainsMono Nerd Font
-# font-family = JetBrainsMono Nerd Font
-# window-title-font-family = "0xProto Nerd Font Mono"
-# font-style = default
-# font-style-bold = default
-# font-style-italic = default
-# font-style-bold-italic = default
-# font-synthetic-style = bold,italic,bold-italic
 font-size = 14
 font-thicken = true
 grapheme-width-method = unicode
 
 # Mouse Settings
 mouse-hide-while-typing = true
-mouse-shift-capture = false
+mouse-shift-capture = true
 focus-follows-mouse = true
-
-# GTK & MacOS Settings
-gtk-tabs-location = bottom
-gtk-wide-tabs = false
-# gtk-adwaita = false
-window-theme = auto
-window-colorspace = srgb
-gtk-titlebar = false
-macos-titlebar-style = hidden
-macos-window-shadow = true
-macos-non-native-fullscreen = false
-macos-option-as-alt = true
 
 # Scrollback & Storage
 scrollback-limit = 10000000
 image-storage-limit = 320000000
 click-repeat-interval = 0
 
-macos-icon = blueprint
+# GTK Settings
+gtk-tabs-location = bottom
+gtk-wide-tabs = false
+# gtk-adwaita = false
+gtk-titlebar = false
 
 # Unbind alt+Number keys to allow them to be passed through to tmux
 keybind = alt+1=unbind
@@ -95,8 +79,6 @@ keybind = super+digit_6=unbind
 keybind = super+digit_7=unbind
 keybind = super+digit_8=unbind
 keybind = super+digit_9=unbind
-
-# keybind = global:cmd+backquote=toggle_quick_terminal
 
 keybind = super+1=text:\x011
 keybind = super+2=text:\x012
