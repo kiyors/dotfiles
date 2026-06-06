@@ -68,7 +68,7 @@
   home.customDirs = [
     ".config/sops/age"
     "personal"
-    "personal/media"
+    { "personal/media" = "Movies/media"; }
     "personal/obsidian"
     "personal/projects"
     "personal/playground"

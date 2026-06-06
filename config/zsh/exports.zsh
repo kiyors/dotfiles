@@ -122,5 +122,11 @@ Darwin)
     [[ -d "$HOME/.local/bin" ]] || mkdir -p "$HOME/.local/bin"
     ln -sf /bin/stty "$HOME/.local/bin/stty"
   fi
+
+  # Ensure standard system tools are explicitly discoverable
+  export PATH="/usr/bin:/usr/sbin:/usr/local/bin:$PATH"
+
+  # Ensure your local environment always clears a path for the standalone toolchain
+  unset SDKROOT
   ;;
 esac
