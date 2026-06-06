@@ -1,0 +1,225 @@
+* {
+  font-size: 13px;
+  font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"';
+  margin: 0px;
+  padding: 0px;
+}
+
+@define-color base   #1e1e2e;
+@define-color mantle #181825;
+@define-color crust  #11111b;
+@define-color text     #cdd6f4;
+@define-color subtext0 #a6adc8;
+@define-color subtext1 #bac2de;
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color surface2 #585b70;
+@define-color overlay0 #6c7086;
+@define-color overlay1 #7f849c;
+@define-color overlay2 #9399b2;
+@define-color blue      #89b4fa;
+@define-color lavender  #b4befe;
+@define-color sapphire  #74c7ec;
+@define-color sky       #89dceb;
+@define-color teal      #94e2d5;
+@define-color green     #a6e3a1;
+@define-color yellow    #f9e2af;
+@define-color peach     #fab387;
+@define-color maroon    #eba0ac;
+@define-color red       #f38ba8;
+@define-color mauve     #cba6f7;
+@define-color pink      #f5c2e7;
+@define-color flamingo  #f2cdcd;
+@define-color rosewater #f5e0dc;
+
+window#waybar {
+  transition-property: background-color;
+  transition-duration: 0.5s;
+  background: transparent;
+  border-radius: 8px;
+}
+
+window#waybar.hidden {
+  opacity: 0.2;
+}
+
+tooltip {
+  background: #1e1e2e;
+  border-radius: 6px;
+}
+
+tooltip label {
+  color: #cad3f5;
+  margin-right: 4px;
+  margin-left: 4px;
+}
+
+.modules-left {
+  background: @base;
+  border: 1px solid @blue;
+  padding-right: 12px;
+  padding-left: 2px;
+  border-radius: 8px;
+}
+
+.modules-center {
+  background: @base;
+  border: 0.5px solid @overlay0;
+  padding-right: 4px;
+  padding-left: 4px;
+  border-radius: 8px;
+}
+
+.modules-right {
+  background: @base;
+  border: 1px solid @blue;
+  padding-right: 12px;
+  padding-left: 12px;
+  border-radius: 8px;
+}
+
+#backlight,
+#battery,
+#clock,
+#cpu,
+#idle_inhibitor,
+#memory,
+#pulseaudio,
+#tray,
+#window,
+#workspaces,
+#custom-notification {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+#idle_inhibitor {
+  color: @blue;
+}
+
+#backlight {
+  color: @blue;
+}
+
+#battery {
+  color: #86a381;
+  font-size: 16px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 12px;
+}
+
+@keyframes blink {
+  to {
+    background-color: #f9e2af;
+    color: #96804e;
+  }
+}
+
+#battery.critical:not(.charging) {
+  background-color: #f38ba8;
+  color: #bf5673;
+  animation-name: blink;
+  animation-duration: 0.5s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+#clock {
+  color: @yellow;
+}
+
+#cpu {
+  color: @yellow;
+}
+
+#memory {
+  color: @green;
+}
+
+#tray {
+  background-color: transparent;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+#tray > .passive {
+  -gtk-icon-effect: none;
+}
+
+#tray > .needs-attention {
+  -gtk-icon-effect: highlight;
+}
+
+/* Style tray icons with colors */
+#tray > widget > * {
+  color: @blue;
+}
+
+#workspaces button {
+  box-shadow: none;
+  text-shadow: none;
+  padding: 0px;
+  border-radius: 8px;
+  padding-left: 4px;
+  padding-right: 4px;
+  transition: all 0.5s cubic-bezier(.55,-0.68,.48,1.682);
+  border: 0px solid transparent;  /* Remove any border completely */
+}
+
+#workspaces button:hover {
+  border-radius: 8px;
+  color: @overlay0;
+  background-color: @surface0;
+  padding-left: 2px;
+  padding-right: 2px;
+  transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+  border: 0px solid transparent;  /* Remove any border completely */
+}
+
+#workspaces button.persistent {
+  color: @surface1;
+  border-radius: 8px;
+  border: 0px solid transparent;  /* Remove any border completely */
+}
+
+#workspaces button.active {
+  color: @peach;
+  border-radius: 8px;
+  padding-left: 6px;
+  padding-right: 6px;
+  transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+  border: 0px solid transparent;  /* Remove any border completely */
+}
+
+#workspaces button.urgent {
+  color: @red;
+  border-radius: 8px;
+  border: 0px solid transparent;  /* Remove any border completely */
+}
+
+#custom-notification {
+  color: @blue;           /* Blue color for notification icon */
+  font-size: 18px;
+  font-weight: bolder;
+  padding-left: 16px;
+  padding-right: 18px;
+  border-radius: 12px;
+}
+
+#pulseaudio,
+#pulseaudio.muted {
+  color: @blue;
+  font-size: 18px;
+  font-weight: bolder;
+  padding-left: 12px;
+  padding-right: 13px;
+  border-radius: 12px;
+}
+
+#window {
+  color: @mauve;
+}

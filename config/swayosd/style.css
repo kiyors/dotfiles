@@ -1,0 +1,47 @@
+window#osd {
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: solid 1px #89b4fa;
+  background: rgba(15, 15, 21, 0.99);
+}
+
+#container {
+  margin: 0px;
+}
+
+image {
+  font-family: "Source Sans Pro";
+  font-size: 14px;
+  color: #cdd6f4;
+}
+
+label {
+  color: #cdd6f4;
+}
+
+progressbar:disabled,
+image:disabled {
+  opacity: 0.5;
+}
+
+progressbar {
+  min-width: 150px;
+  min-height: 5px;
+  border-radius: 999px;
+  background: transparent;
+  border: none;
+}
+
+trough {
+  min-height: inherit;
+  border-radius: inherit;
+  border: none;
+  background: rgba(137, 180, 250, 0.3);
+}
+
+progress {
+  min-height: inherit;
+  border-radius: inherit;
+  border: none;
+  background: #89b4fa;
+}
