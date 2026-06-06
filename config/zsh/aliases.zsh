@@ -3,7 +3,6 @@
 alias c='clear'
 alias vi='nvim'
 alias vim='nvim'
-alias ni='nvim'
 alias lzg='lazygit'
 alias lzd='lazydocker'
 alias ff='fastfetch'

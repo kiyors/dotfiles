@@ -54,6 +54,7 @@ export PATH="$HOME/.docker/bin":$PATH
 export PATH="$HOME/.local/nvim-macos-arm64/bin":$PATH
 export PATH=$HOME/.cargo/bin:$PATH
 export PATH=$HOME/.local/share/go/bin:$PATH
+export PATH=$HOME/.cache/.bun/bin:$PATH
 export PATH="$HOME/.local/share/neovim/bin":$PATH
 
 # pnpm
