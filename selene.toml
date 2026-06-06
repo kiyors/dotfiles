@@ -1,0 +1,7 @@
+std = "vim"
+
+[globals]
+hl = {}
+
+[lints]
+mixed_table = "allow"
