@@ -21,6 +21,7 @@
 
   editors = {
     neovim.enable = true;
+    nvf.enable = true;
   };
 
   # Lua dev tooling backs the Neovim config (LSP, selene, stylua, luarocks)

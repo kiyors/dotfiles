@@ -29,6 +29,7 @@
   editors = {
     zed.enable = true;
     neovim.enable = true;
+    nvf.enable = true;
   };
 
   cli = {

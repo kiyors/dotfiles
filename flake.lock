@@ -52,11 +52,11 @@
     "brew-api": {
       "flake": false,
       "locked": {
-        "lastModified": 1780715162,
-        "narHash": "sha256-KNRduvDFvmZRgjqq8uCMURFGC75wi3JPWHXoKNnoCVE=",
+        "lastModified": 1780723077,
+        "narHash": "sha256-aHJvMYfHUPjLRb3kLV4XvEeEWCoT7Q+w3MMpnoHobkM=",
         "owner": "BatteredBunny",
         "repo": "brew-api",
-        "rev": "9a3b86fc3469e9f4ddddbc5ff2d19a948ca1ceaa",
+        "rev": "ab7b479f04fa05c8876df90dd76226e43d69509e",
         "type": "github"
       },
       "original": {
@@ -235,6 +235,22 @@
         "type": "github"
       }
     },
+    "flake-compat_4": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777699697,
+        "narHash": "sha256-Eg9b/rq/ECYwNwEXs5i9wHyhxNI0JrYx2srdI2uZMaQ=",
+        "ref": "refs/heads/main",
+        "rev": "382052b74656a369c5408822af3f2501e9b1af81",
+        "revCount": 94,
+        "type": "git",
+        "url": "https://git.lix.systems/lix-project/flake-compat.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.lix.systems/lix-project/flake-compat.git"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -254,6 +270,27 @@
       "original": {
         "type": "tarball",
         "url": "https://flakehub.com/f/hercules-ci/flake-parts/0.1"
+      }
+    },
+    "flake-parts_2": {
+      "inputs": {
+        "nixpkgs-lib": [
+          "nvf",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1778716662,
+        "narHash": "sha256-m1Yf0wZ8j1OHjTc2UwHwyQRSnNeSgLJOd7q5Y45hzi4=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "f7c1a2d347e4c52d5fb8d10cb4d94b5884e546fb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
       }
     },
     "git-hooks-nix": {
@@ -365,11 +402,11 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1780715842,
-        "narHash": "sha256-ySwT3kqbmarRmzVJZHzJzJ1v89aImiLZuaJW/aX6sFE=",
+        "lastModified": 1780723578,
+        "narHash": "sha256-BWZriTfWdfn6uQxHQkML8FNjWWv+JkeP1ch9uujM42Q=",
         "owner": "homebrew",
         "repo": "homebrew-cask",
-        "rev": "37775e2fc8b49abe8d067667b71f4c5e71eb66ca",
+        "rev": "6f74dfb01c911360f6eebb3d5f9fae39b3afadff",
         "type": "github"
       },
       "original": {
@@ -381,11 +418,11 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1780716526,
-        "narHash": "sha256-DMcnF4Q9845FmxtH7XwflCl7TtV2d0YDSLYN8mKFVBw=",
+        "lastModified": 1780724855,
+        "narHash": "sha256-hleoPD5rTezom6tTD5aeL1uVZkELCwC3r1l3MEuiLoQ=",
         "owner": "homebrew",
         "repo": "homebrew-core",
-        "rev": "aaad51ca57d53b2495a081ef503a077c084894ba",
+        "rev": "65450c8ce163f83ec9d1cda4377db9ef2a54f8f5",
         "type": "github"
       },
       "original": {
@@ -715,6 +752,21 @@
         "type": "github"
       }
     },
+    "mnw": {
+      "locked": {
+        "lastModified": 1778541201,
+        "narHash": "sha256-n0twkzWexzjsoDycOTvvQNuGEdg62UiNHYcFCduYpKI=",
+        "owner": "Gerg-L",
+        "repo": "mnw",
+        "rev": "1a3573fc9d2486738fe0b2cacc5cd10dd5f3a445",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Gerg-L",
+        "repo": "mnw",
+        "type": "github"
+      }
+    },
     "nanobrew-src": {
       "flake": false,
       "locked": {
@@ -728,6 +780,28 @@
       "original": {
         "owner": "justrach",
         "repo": "nanobrew",
+        "type": "github"
+      }
+    },
+    "ndg": {
+      "inputs": {
+        "nixpkgs": [
+          "nvf",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779233504,
+        "narHash": "sha256-YIKEyzh0NFQlD0O92LQQNMoVCDwV8yw1Xz0Iu+4ZC5U=",
+        "owner": "feel-co",
+        "repo": "ndg",
+        "rev": "86f6644411a64d5413711895b7cf6e0e1be465b6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "feel-co",
+        "ref": "refs/tags/v2.8.0",
+        "repo": "ndg",
         "type": "github"
       }
     },
@@ -942,6 +1016,31 @@
         "type": "github"
       }
     },
+    "nvf": {
+      "inputs": {
+        "flake-compat": "flake-compat_4",
+        "flake-parts": "flake-parts_2",
+        "mnw": "mnw",
+        "ndg": "ndg",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": "systems_3"
+      },
+      "locked": {
+        "lastModified": 1780650009,
+        "narHash": "sha256-zUN3BFopCC9J7g8cQO69s93EKCKApSwRlLWMC2bI+GY=",
+        "owner": "notashelf",
+        "repo": "nvf",
+        "rev": "0b92b1783de48499303fc6e61478da34ee124482",
+        "type": "github"
+      },
+      "original": {
+        "owner": "notashelf",
+        "repo": "nvf",
+        "type": "github"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat_2",
@@ -983,6 +1082,7 @@
         "nix-nanobrew": "nix-nanobrew",
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-stable": "nixpkgs-stable",
+        "nvf": "nvf",
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",
         "vicinae": "vicinae",
@@ -1032,7 +1132,7 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "systems": "systems_3"
+        "systems": "systems_4"
       },
       "locked": {
         "lastModified": 1780422259,
@@ -1109,12 +1209,27 @@
         "type": "github"
       }
     },
+    "systems_5": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
     "vicinae": {
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
         ],
-        "systems": "systems_4"
+        "systems": "systems_5"
       },
       "locked": {
         "lastModified": 1780711864,

@@ -19,7 +19,7 @@ myLib.mkHomeModule {
       packages = with pkgs; [
         nodejs_24
         pnpm
-        bun
+        # bun
         npm-check-updates
         npkill
         husky
@@ -48,19 +48,19 @@ myLib.mkHomeModule {
           prefix=${npmGlobalDir}
         '';
 
-        ".bunfig.toml".text = ''
-          [runtime]
-          logLevel = "debug"
-          telemetry = false
-
-          [install]
-          optional = true
-          dev = true
-          peer = true
-          production = false
-          exact = true
-          auto = "fallback"
-        '';
+        # ".bunfig.toml".text = ''
+        #   [runtime]
+        #   logLevel = "debug"
+        #   telemetry = false
+        #
+        #   [install]
+        #   optional = true
+        #   dev = true
+        #   peer = true
+        #   production = false
+        #   exact = true
+        #   auto = "fallback"
+        # '';
       };
     };
     home.file.".config/pnpm".source =

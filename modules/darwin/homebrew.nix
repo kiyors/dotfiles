@@ -133,6 +133,7 @@
           brews = [
             "mas"
             "mole"
+            "bun"
             # "sheets"
             # "opencode"
             # "colima"
