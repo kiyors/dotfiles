@@ -13,7 +13,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-nanobrew = {
-      url = "github:gaurav2361/nix-nanobrew";
+      url = "github:kiyors/nix-nanobrew";
     };
     nix-homebrew = {
       url = "github:zhaofengli-wip/nix-homebrew";
@@ -76,7 +76,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nh = {
-      url = "github:gaurav2361/nh";
+      url = "github:kiyors/nh";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nvf = {
