@@ -1,0 +1,20 @@
+# Possible values: "Legacy", "Start", "End", "Center", "SpaceAround", "SpaceBetween"
+layout = "SpaceAround"
+
+# Window width
+# Possible values: "auto" or a positive integer
+width = "auto"
+
+toggle_scanning = "s"
+esc_quit = true
+
+[adapter]
+toggle_pairing = "p"
+toggle_power = "o"
+toggle_discovery = "d"
+
+[paired_device]
+unpair = "u"
+toggle_trust = "t"
+toggle_favorite = "f"
+rename = "e"

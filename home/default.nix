@@ -12,6 +12,8 @@
     ./shell
     ./lazydocker.nix
     ./ghostty.nix
+    ./impala.nix
+    ./bluetui.nix
     ./hyprland.nix
     ./vicinae.nix
     ./waybar.nix

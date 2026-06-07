@@ -34,27 +34,37 @@ ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 ZVM_SYSTEM_CLIPBOARD_ENABLED=true
 # Load ZVM synchronously so keys pressed right after the prompt aren't dropped.
 ZVM_INIT_MODE=sourcing
-{
-  sheldon_cache="$ZSH_CACHE_DIR/sheldon.zsh"
-  sheldon_lock="$HOME/.local/share/sheldon/plugins.lock"
-  # Regenerate cache when missing/empty or the lockfile is newer.
-  # Use a temp file so a partial first-run (plugins still downloading) never
-  # commits a broken cache that breaks subsequent shells.
-  if [[ ! -s "$sheldon_cache" || "$sheldon_lock" -nt "$sheldon_cache" ]]; then
-    if sheldon source > "$sheldon_cache.tmp" 2>/dev/null && [[ -s "$sheldon_cache.tmp" ]]; then
-      mv "$sheldon_cache.tmp" "$sheldon_cache"
-    else
-      rm -f "$sheldon_cache.tmp"
+if (( $+commands[sheldon] )); then
+  () {
+    local sheldon_cache="$ZSH_CACHE_DIR/sheldon.zsh"
+    local sheldon_toml="$HOME/.config/sheldon/plugins.toml"
+    local sheldon_lock="$HOME/.local/share/sheldon/plugins.lock"
+    [[ -f "$sheldon_lock" ]] || sheldon_lock="$HOME/.config/sheldon/plugins.lock"
+
+    # Regenerate cache if missing, if config is newer, or if lockfile is newer.
+    if [[ ! -s "$sheldon_cache" || "$sheldon_toml" -nt "$sheldon_cache" || ( -f "$sheldon_lock" && "$sheldon_lock" -nt "$sheldon_cache" ) ]]; then
+      local tmp="$sheldon_cache.tmp"
+      if [[ ! -s "$sheldon_cache" ]]; then
+        echo "Sheldon: Initializing plugins (first run)..."
+        if sheldon source > "$tmp" && [[ -s "$tmp" ]]; then
+          mv "$tmp" "$sheldon_cache"
+        else
+          rm -f "$tmp"
+        fi
+      else
+        # Silent update for subsequent runs
+        sheldon source > "$tmp" 2>/dev/null && [[ -s "$tmp" ]] && mv "$tmp" "$sheldon_cache" || rm -f "$tmp"
+      fi
     fi
-  fi
-  if [[ -s "$sheldon_cache" ]]; then
-    source "$sheldon_cache"
-  else
-    # First-run fallback: cache wasn't writable/usable yet — source live so
-    # plugins still load on a fresh machine.
-    eval "$(sheldon source)"
-  fi
-}
+
+    if [[ -s "$sheldon_cache" ]]; then
+      source "$sheldon_cache"
+    else
+      # Fallback: source live if cache generation failed
+      eval "$(sheldon source)"
+    fi
+  }
+fi
 
 # compinit (fast: -C uses cached dump, skips re-scan)
 autoload -Uz compinit && compinit -C
@@ -86,7 +96,6 @@ ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}) %{$fg[yellow]%}%1{✘%}"
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
 
 # Shell integrations (sheldon already sourced from cache above — do not re-source)
-eval "$(omp completions zsh)"
 _cached_eval fzf fzf --zsh
 _cached_eval zoxide zoxide init --cmd cd zsh
 _cached_eval atuin atuin init zsh --disable-up-arrow
