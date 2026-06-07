@@ -12,12 +12,13 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-hardware.url = "github:oxodx/nixos-hardware";
+    nixcord.url = "github:kaylorben/nixcord";
     nix-nanobrew = {
       url = "github:kiyors/nix-nanobrew";
     };
     nix-homebrew = {
       url = "github:zhaofengli-wip/nix-homebrew";
-      # Overrides the hardcoded Homebrew 5.1.7 pin to grab the latest master
       inputs.brew-src.url = "github:Homebrew/brew";
     };
     homebrew-core = {
@@ -63,8 +64,6 @@
       url = "github:vicinaehq/extensions";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixos-hardware.url = "github:oxodx/nixos-hardware";
-    nixcord.url = "github:kaylorben/nixcord";
     betterfox = {
       url = "github:yokoffing/Betterfox";
       flake = false;
@@ -73,7 +72,6 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # ghostty.url = "github:ghostty-org/ghostty";
     determinate = {
       url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -84,7 +82,9 @@
     };
     nvf = {
       url = "github:notashelf/nvf";
-      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    ghostty = {
+      url = "github:ghostty-org/ghostty";
     };
   };
 
@@ -106,7 +106,6 @@
           hostname = "atlas";
           username = "gaurav";
           system = lib.systems.x86_64-linux;
-          withHomeManager = false;
         };
         hades = {
           isNixos = true;
