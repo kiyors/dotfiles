@@ -10,8 +10,8 @@
   "diff_view_style": "unified",
   "agent_servers": {
     "gemini": {
-      "type": "registry"
-    }
+      "type": "registry",
+    },
   },
   "outline_panel": {
     "dock": "left",
@@ -30,7 +30,7 @@
   "project_panel": {
     "dock": "right",
   },
-  "vim_mode": true,
+  "vim_mode": false,
   "icon_theme": "Catppuccin Mocha",
   "ui_font_size": 16,
   "buffer_font_size": 14,
