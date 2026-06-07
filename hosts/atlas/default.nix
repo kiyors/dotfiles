@@ -9,51 +9,62 @@
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../modules
+    inputs.vicinae.nixosModules.default
   ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelParams = [ "nvidia-drm.modeset=1" ];
 
-  networking.hostName = "atlas"; # Define your hostname.
+  networking.hostName = "atlas";
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  # Enable the X11 windowing system.
+  services.xserver.enable = true;
+
+  # Enable the KDE Plasma Desktop Environment.
+  services.displayManager.sddm.enable = true;
+  services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
     variant = "";
   };
-  environment.systemPackages = [ pkgs.google-chrome ];
+
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  users = {
-    defaultUserShell = pkgs.zsh;
-    users.gaurav = {
-      isNormalUser = true;
-      description = "Gaurav";
-      extraGroups = [
-        "networkmanager"
-        "wheel"
-        "docker"
-      ];
-      packages = with pkgs; [
-        #  thunderbird
-      ];
-    };
+  # Define a user account.
+  users.users."gaurav" = {
+    isNormalUser = true;
+    description = "Gaurav";
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker"
+    ];
+    shell = pkgs.zsh;
   };
 
+  # Install firefox.
+  programs.firefox.enable = true;
   programs.zsh.enable = true;
 
-  # Enable automatic login for the user.
-  services.displayManager.autoLogin.enable = true;
-  services.displayManager.autoLogin.user = "gaurav";
+  # Add swap file for heavy builds
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8 * 1024; # 8GB
+    }
+  ];
+
+  # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-  system.stateVersion = "26.05"; # Did you read the comment?
+
+  system.stateVersion = "26.05";
 
   modules = {
     common.packages.enable = true;
@@ -65,8 +76,8 @@
       locale.enable = true;
       audio.enable = true;
       bluetooth.enable = true;
-      nvidia.enable = true;
       desktop.hyprland.enable = true;
+      nvidia.enable = true;
     };
   };
 }

@@ -29,7 +29,21 @@
       allowed-signers = {
         path = "${sshDir}/allowed_signers";
       };
+      nix_access_tokens = { };
     };
+
+  sops.templates."vicinae-secrets.json" = {
+    path = "${config.home.homeDirectory}/.config/vicinae/secrets.json";
+    content = builtins.toJSON {
+      providers = {
+        "@knoopx/nix" = {
+          preferences = {
+            githubToken = config.sops.placeholder.nix_access_tokens;
+          };
+        };
+      };
+    };
+  };
 
   systemd.user.services.mbsync.Unit.After = [ "sops-nix.service" ];
 
