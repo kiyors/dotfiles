@@ -13,41 +13,39 @@
   "margin-right": 8,
   "margin-bottom": 0,
   "spacing": 5,
-  "modules-left": [
-    "hyprland/workspaces"
-  ],
-  "modules-center": [
-    "idle_inhibitor",
-    "clock"
-  ],
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["idle_inhibitor", "clock"],
   "modules-right": [
     "cpu",
     "memory",
     "backlight",
     "pulseaudio",
+    "custom/bluetooth",
+    "network",
     "battery",
     "tray",
-    "custom/notification"
+    "custom/notification",
   ],
+  "network": {
+    "format-wifi": "",
+    "format-ethernet": "󰈀",
+    "format-disconnected": "󰖪",
+    "tooltip-format": "{essid}",
+    "on-click": "ghostty --class=Impala -e impala",
+  },
+  "custom/bluetooth": {
+    "format": "",
+    "on-click": "ghostty --class=Bluetui -e bluetui",
+    "tooltip": false,
+  },
   "hyprland/workspaces": {
     "disable-scroll": true,
     "all-outputs": true,
     "active-only": false,
     "on-click": "activate",
     "persistent-workspaces": {
-      "*": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10
-      ]
-    }
+      "*": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    },
   },
   "hyprland/window": {
     "format": "  {}",
@@ -62,37 +60,28 @@
       "(.*)Visual Studio Code": "Code 󰨞",
       "(.*) — Thunar": "$1 󰉋",
       "(.*)Spotify": "Spotify 󰓇",
-      "(.*)Steam": "Steam 󰓓"
+      "(.*)Steam": "Steam 󰓓",
     },
     "icon": true,
     "icon-size": 20,
-    "max-length": 30
+    "max-length": 30,
   },
   "cava": {
     "hide_on_silence": false,
     "framerate": 60,
     "bars": 10,
-    "format-icons": [
-      "▁",
-      "▂",
-      "▃",
-      "▄",
-      "▅",
-      "▆",
-      "▇",
-      "█"
-    ],
+    "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"],
     "input_delay": 1,
     "sleep_timer": 5,
     "bar_delimiter": 0,
-    "on-click": "playerctl play-pause"
+    "on-click": "playerctl play-pause",
   },
   "idle_inhibitor": {
     "format": "{icon}",
     "format-icons": {
       "activated": "󰥔",
-      "deactivated": ""
-    }
+      "deactivated": "",
+    },
   },
   "clock": {
     "format": "{:%a %d %b %R}",
@@ -107,8 +96,8 @@
       "format": {
         "months": "<span color='#ffead3'><b>{}</b></span>",
         "weekdays": "<span color='#ffcc66'><b>{}</b></span>",
-        "today": "<span color='#ff6699'><b>{}</b></span>"
-      }
+        "today": "<span color='#ff6699'><b>{}</b></span>",
+      },
     },
     "interval": 60,
     "max-length": 25,
@@ -118,23 +107,14 @@
       "on-click-forward": "tz_up",
       "on-click-backward": "tz_down",
       "on-scroll-up": "shift_up",
-      "on-scroll-down": "shift_down"
-    }
+      "on-scroll-down": "shift_down",
+    },
   },
   "cpu": {
     "interval": 10,
     "format": "󰍛 {usage}%",
     "format-alt": "{icon0}{icon1}{icon2}{icon3}",
-    "format-icons": [
-      "▁",
-      "▂",
-      "▃",
-      "▄",
-      "▅",
-      "▆",
-      "▇",
-      "█"
-    ]
+    "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"],
   },
   "memory": {
     "interval": 30,
@@ -142,17 +122,13 @@
     "format-alt": "󰾅 {used}GB",
     "max-length": 10,
     "tooltip": true,
-    "tooltip-format": " {used:.1f}GB/{total:.1f}GB"
+    "tooltip-format": " {used:.1f}GB/{total:.1f}GB",
   },
   "backlight": {
     "format": "{icon}  {percent}%",
-    "format-icons": [
-      "󰃞",
-      "󰃟",
-      "󰃠"
-    ],
+    "format-icons": ["󰃞", "󰃟", "󰃠"],
     "on-scroll-up": "brightnessctl set 2%+",
-    "on-scroll-down": "brightnessctl set 2%-"
+    "on-scroll-down": "brightnessctl set 2%-",
   },
   "pulseaudio": {
     "format": "{icon}",
@@ -164,56 +140,30 @@
       "phone": "",
       "portable": "",
       "car": "",
-      "default": [
-        "󰕿",
-        "󰖀",
-        "󰕾"
-      ]
+      "default": ["󰕿", "󰖀", "󰕾"],
     },
     "on-click": "swayosd-client --output-volume mute-toggle",
     "on-click-right": "pavucontrol -t 3",
     "tooltip-format": "{icon} {desc} // {volume}%",
-    "scroll-step": 1
+    "scroll-step": 1,
   },
   "battery": {
     "states": {
       "good": 95,
       "warning": 30,
-      "critical": 20
+      "critical": 20,
     },
     "format": "{icon}  {capacity}%",
     "format-charging": " {capacity}%",
     "format-plugged": " {capacity}%",
     "format-alt": "{time} {icon}",
     "format-icons": {
-      "default": [
-        "󰁺",
-        "󰁻",
-        "󰁼",
-        "󰁽",
-        "󰁾",
-        "󰁿",
-        "󰂀",
-        "󰂁",
-        "󰂂",
-        "󰁹"
-      ],
-      "charging": [
-        "󰢜",
-        "󰂆",
-        "󰂇",
-        "󰂈",
-        "󰢝",
-        "󰂉",
-        "󰢞",
-        "󰂊",
-        "󰂋",
-        "󰂅"
-      ]
+      "default": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+      "charging": ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"],
     },
     "format-full": "󱟢",
     "on-click": "swayosd-client --custom-message=\"Battery: {capacity}%\"",
-    "on-click-right": "swayosd-client --custom-message=\"Powermode is set to $(powerprofilesctl get)\" --custom-icon=\"emblem-default\""
+    "on-click-right": "swayosd-client --custom-message=\"Powermode is set to $(powerprofilesctl get)\" --custom-icon=\"emblem-default\"",
   },
   "custom/notification": {
     "tooltip": false,
@@ -226,17 +176,17 @@
       "inhibited-notification": "<span foreground='#89b4fa'><sup></sup></span>",
       "inhibited-none": "",
       "dnd-inhibited-notification": "<span foreground='#89b4fa'><sup></sup></span>",
-      "dnd-inhibited-none": ""
+      "dnd-inhibited-none": "",
     },
     "return-type": "json",
     "exec-if": "which swaync-client",
     "exec": "swaync-client -swb",
     "on-click": "swaync-client -t",
-    "escape": true
+    "escape": true,
   },
   "tray": {
     "icon-size": 16,
     "spacing": 8,
-    "show-passive-items": true
-  }
+    "show-passive-items": true,
+  },
 }

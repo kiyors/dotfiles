@@ -2,50 +2,49 @@
 
 -- https://wiki.hyprland.org/Configuring/Variables/#general
 hl.config({
-	general = {
-		gaps_in = 3,
-		gaps_out = 8,
+  general = {
+    gaps_in = 3,
+    gaps_out = 8,
 
-		border_size = 1,
+    border_size = 1,
 
-		-- https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
-		col = {
-			active_border = "rgba(ca9ee6ff) rgba(f2d5cfff) 45deg",
-			inactive_border = "rgba(b4befecc) rgba(6c7086cc) 45deg",
-		},
+    -- https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
+    col = {
+      active_border = "rgba(ca9ee6ff)",
+      inactive_border = "rgba(b4befecc)",
+    },
 
-		-- Set to true enable resizing windows by clicking and dragging on borders and gaps
-		resize_on_border = true,
+    -- Set to true enable resizing windows by clicking and dragging on borders and gaps
+    resize_on_border = true,
 
-		-- Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
-		allow_tearing = false,
+    -- Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
+    allow_tearing = false,
 
-		layout = "master",
-	},
+    layout = "master",
+  },
 
-	-- https://wiki.hyprland.org/Configuring/Variables/#decoration
-	decoration = {
-		rounding = 10,
-		rounding_power = 2,
+  -- https://wiki.hyprland.org/Configuring/Variables/#decoration
+  decoration = {
+    rounding = 10,
 
-		active_opacity = 1.0,
-		inactive_opacity = 0.9,
+    active_opacity = 1.0,
+    inactive_opacity = 0.9,
 
-		shadow = {
-			enabled = true,
-			range = 20,
-			render_power = 3,
-			color = "rgba(1a1a1aee)",
-		},
+    shadow = {
+      enabled = true,
+      range = 20,
+      render_power = 3,
+      color = "rgba(1a1a1aee)",
+    },
 
-		-- https://wiki.hyprland.org/Configuring/Variables/#blur
-		blur = {
-			enabled = true,
-			size = 18,
-			passes = 1,
-			vibrancy = 0.1696,
-		},
-	},
+    -- https://wiki.hyprland.org/Configuring/Variables/#blur
+    blur = {
+      enabled = true,
+      size = 18,
+      passes = 1,
+      vibrancy = 0.1696,
+    },
+  },
 })
 
 -- https://wiki.hyprland.org/Configuring/Variables/#animations
@@ -80,56 +79,53 @@ hl.animation({ leaf = "zoomFactor", enabled = true, speed = 7, bezier = "default
 
 -- See https://wiki.hypr.land/Configuring/Layouts/Dwindle-Layout/ for more
 hl.config({
-	dwindle = {
-		preserve_split = true, -- You probably want this
-	},
+  dwindle = {
+    preserve_split = true, -- You probably want this
+  },
 })
 
 -- See https://wiki.hypr.land/Configuring/Layouts/Master-Layout/ for more
 hl.config({
-	master = {
-		new_status = "master",
-		allow_small_split = true,
-		mfact = 0.5,
-	},
+  master = {
+    new_status = "master",
+    allow_small_split = true,
+    mfact = 0.5,
+  },
 })
 
 -- See https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/ for more
 hl.config({
-	scrolling = {
-		fullscreen_on_one_column = true,
-	},
+  scrolling = {
+    fullscreen_on_one_column = true,
+  },
 })
 
 hl.config({
-	misc = {
-		vfr = true,
-		force_default_wallpaper = 1,
-		disable_hyprland_logo = true,
-		disable_splash_rendering = true,
-		disable_autoreload = true,
-		focus_on_activate = true,
-		new_window_takes_over_fullscreen = 2,
-	},
+  misc = {
+    force_default_wallpaper = 1,
+    disable_hyprland_logo = true,
+    disable_autoreload = false,
+    focus_on_activate = true,
+  },
 })
 
 -- https://wiki.hyprland.org/Configuring/Variables/#input
 hl.config({
   input = {
-    kb_layout  = "us",
-    kb_variant = "",
-    kb_model   = "",
-    kb_options = "",
-    kb_rules   = "",
+    kb_layout          = "us",
+    kb_variant         = "",
+    kb_model           = "",
+    kb_options         = "",
+    kb_rules           = "",
 
-    follow_mouse = 1,
+    follow_mouse       = 1,
 
-    sensitivity = 1, -- -1.0 - 1.0, 0 means no modification.
-    repeat_delay = 300,
-    repeat_rate = 50,
+    sensitivity        = 1, -- -1.0 - 1.0, 0 means no modification.
+    repeat_delay       = 300,
+    repeat_rate        = 50,
     numlock_by_default = true,
 
-    touchpad = {
+    touchpad           = {
       natural_scroll = true,
       clickfinger_behavior = true,
     },
@@ -137,13 +133,12 @@ hl.config({
 })
 
 hl.gesture({
-    fingers = 3,
-    direction = "horizontal",
-    action = "workspace"
+  fingers = 3,
+  direction = "horizontal",
+  action = "workspace"
 })
 
 -- Permissions for security
 hl.permission("/usr/bin/grim", "screencopy", "allow")
 hl.permission("/usr/lib/xdg-desktop-portal-hyprland", "screencopy", "allow")
 hl.permission("/usr/bin/hyprpm", "plugin", "allow")
-

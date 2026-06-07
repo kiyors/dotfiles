@@ -44,7 +44,19 @@ myLib.mkHomeModule {
       systemd.enable = false; # Handled by custom launch or lua config
     };
 
-    # Symlink the hypr directory to allow Lua/Conf based configuration
+    # Disable HM-managed configs to allow symlinking the whole hypr directory
+    xdg.configFile."hypr/.luarc.json".enable = lib.mkForce false;
+    xdg.configFile."hypr/hyprland.lua".enable = lib.mkForce false;
+    xdg.configFile."hypr/hyprland.conf".enable = lib.mkForce false;
+    xdg.configFile."hypr/hyprlock.conf".enable = lib.mkForce false;
+    xdg.configFile."hypr/hypridle.conf".enable = lib.mkForce false;
+    xdg.configFile."hypr/autostart.lua".enable = lib.mkForce false;
+    xdg.configFile."hypr/envs.lua".enable = lib.mkForce false;
+    xdg.configFile."hypr/keybindings.lua".enable = lib.mkForce false;
+    xdg.configFile."hypr/looknfeel.lua".enable = lib.mkForce false;
+    xdg.configFile."hypr/monitors.lua".enable = lib.mkForce false;
+    xdg.configFile."hypr/windows.lua".enable = lib.mkForce false;
+
     xdg.configFile."hypr".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/hypr";
   };

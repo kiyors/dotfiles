@@ -14,6 +14,9 @@ myLib.mkHomeModule {
       enable = true;
     };
 
+    # Disable HM-managed configs to allow symlinking the whole swayosd directory
+    xdg.configFile."swayosd/style.css".enable = lib.mkForce false;
+
     # Symlink the swayosd directory
     xdg.configFile."swayosd".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/swayosd";

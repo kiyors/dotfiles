@@ -19,6 +19,10 @@ myLib.mkHomeModule {
         autoStart = true;
         environment = {
           USE_LAYER_SHELL = 1;
+          XDG_DATA_DIRS = "${config.home.homeDirectory}/.nix-profile/share:/etc/profiles/per-user/${config.home.username}/share:/run/current-system/sw/share:/usr/share:${config.home.homeDirectory}/.local/share";
+          PATH = "${lib.makeBinPath [ pkgs.pulseaudio ]}:${
+            inputs.vicinae.packages.${pkgs.stdenv.hostPlatform.system}.default
+          }/libexec/vicinae:${config.home.homeDirectory}/.nix-profile/bin:/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin:/run/wrappers/bin";
         };
       };
       settings = {
@@ -27,6 +31,11 @@ myLib.mkHomeModule {
         pop_to_root_on_close = true;
         favicon_service = "twenty";
         search_files_in_root = true;
+        providers = {
+          applications = {
+            enabled = true;
+          };
+        };
         font = {
           normal = {
             size = 12;
@@ -46,18 +55,14 @@ myLib.mkHomeModule {
         launcher_window = {
           opacity = 0.98;
         };
-        # Import secrets if they exist (handled in host-specific secrets module)
-        imports =
-          let
-            secretsPath = "${config.home.homeDirectory}/.config/vicinae/secrets.json";
-          in
-          pkgs.lib.optional (builtins.pathExists secretsPath) secretsPath;
       };
       extensions = with inputs.vicinae-extensions.packages.${pkgs.stdenv.hostPlatform.system}; [
         bluetooth
         nix
         power-profile
+        wifi-commander
       ];
     };
+    home.packages = [ pkgs.pulseaudio ];
   };
 }

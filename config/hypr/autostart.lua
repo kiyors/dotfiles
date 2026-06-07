@@ -1,12 +1,11 @@
-hl.on("hyprland.start", function () 
+hl.on("hyprland.start", function ()
   hl.exec_cmd("dbus-update-activation-environment --systemd --all")
   hl.exec_cmd("systemctl --user start hyprpolkitagent")
   hl.exec_cmd("hypridle")
-  hl.exec_cmd("vicinae server")
+  hl.exec_cmd("systemctl --user start vicinae.service")
+  hl.exec_cmd("waybar")
   hl.exec_cmd("swayosd-server")
   hl.exec_cmd("wl-clip-persist --clipboard regular --all-mime-type-regex '^(?!x-kde-passwordManagerHint).+'")
   hl.exec_cmd("hyprpaper")
   hl.exec_cmd("nextcloud --background")
 end)
-
-

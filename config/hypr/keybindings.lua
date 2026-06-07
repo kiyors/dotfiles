@@ -11,6 +11,7 @@ local messenger = "signal-desktop"
 local webapp = "google-chrome --new-window --ozone-platform=wayland --app="
 
 hl.bind("SUPER + Return", hl.dsp.exec_cmd(terminal))
+hl.bind("SUPER + T", hl.dsp.exec_cmd(terminal))
 hl.bind("SUPER + E", hl.dsp.exec_cmd(fileManager))
 hl.bind("SUPER + B", hl.dsp.exec_cmd(browser))
 hl.bind("SUPER + M", hl.dsp.exec_cmd(music))
@@ -19,11 +20,11 @@ hl.bind("SUPER + G", hl.dsp.exec_cmd(messenger))
 hl.bind("SUPER + O", hl.dsp.exec_cmd("obsidian"))
 hl.bind("SUPER + Slash", hl.dsp.exec_cmd(passwordManager))
 
-hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("vicinae toggle"))
+hl.bind("ALT + SPACE", hl.dsp.exec_cmd("vicinae toggle"))
 hl.bind("SUPER + V", hl.dsp.exec_cmd("vicinae vicinae://launch/clipboard/history"))
 hl.bind("SUPER + C", hl.dsp.exec_cmd("quickmenu"))
 hl.bind("SUPER + SHIFT + SPACE", hl.dsp.exec_cmd("hyprfocus-toggle"))
-hl.bind("Control_L + Escape", hl.dsp.exec_cmd("pkill waybar || waybar"))
+hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("pkill waybar || waybar"))
 
 hl.bind("SUPER + SHIFT + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind("ALT + F4", hl.dsp.exec_cmd("powermenu"))
@@ -66,21 +67,21 @@ end
 hl.bind("SUPER + S", hl.dsp.workspace.toggle_special("magic"))
 hl.bind("SUPER + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
--- Swap active window with the one next to it with mainMod + SHIFT + arrow keys
-hl.bind("SUPER + SHIFT + Left", hl.dsp.window.swap({ direction = "left" }))
-hl.bind("SUPER + SHIFT + Right", hl.dsp.window.swap({ direction = "right" }))
-hl.bind("SUPER + SHIFT + Up", hl.dsp.window.swap({ direction = "up" }))
-hl.bind("SUPER + SHIFT + Down", hl.dsp.window.swap({ direction = "down" }))
+-- Swap active window with the one next to it with mainMod + SHIFT + CTRL + arrow keys
+hl.bind("SUPER + CTRL + Left", hl.dsp.window.swap({ direction = "left" }))
+hl.bind("SUPER + CTRL + Right", hl.dsp.window.swap({ direction = "right" }))
+hl.bind("SUPER + CTRL + Up", hl.dsp.window.swap({ direction = "up" }))
+hl.bind("SUPER + CTRL + Down", hl.dsp.window.swap({ direction = "down" }))
 
 -- Layout msg
 hl.bind("SUPER + SHIFT + Left", hl.dsp.layout("addmaster"))
 hl.bind("SUPER + SHIFT + Right", hl.dsp.layout("removemaster"))
 
 -- Resize active window
-hl.bind("SUPER + Minus ", hl.dsp.window.resize({ x = -100, y = 0 }))
-hl.bind("SUPER + Equal ", hl.dsp.window.resize({ x = 100, y = 0 }))
-hl.bind("SUPER + SHIFT + Minus ", hl.dsp.window.resize({ x = 0, y = -100 }))
-hl.bind("SUPER + SHIFT + Equal ", hl.dsp.window.resize({ x = 0, y = 100 }))
+hl.bind("SUPER + Minus", hl.dsp.window.resize({ x = -100, y = 0 }))
+hl.bind("SUPER + Equal", hl.dsp.window.resize({ x = 100, y = 0 }))
+hl.bind("SUPER + SHIFT + Minus", hl.dsp.window.resize({ x = 0, y = -100 }))
+hl.bind("SUPER + SHIFT + Equal", hl.dsp.window.resize({ x = 0, y = 100 }))
 
 -- Scroll through existing workspaces with Super + scroll
 hl.bind("SUPER + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
