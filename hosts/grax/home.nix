@@ -39,6 +39,7 @@
     waybar.enable = true;
     swaync.enable = true;
     swayosd.enable = true;
+    thunar.enable = true;
   };
 
   network.impala.enable = true;
@@ -50,23 +51,19 @@
   };
 
   media = {
-    mpv.enable = false;
+    mpv.enable = true;
+    spicetify.enable = true;
   };
 
   secrets.sops.enable = true;
 
-  home.username = "gaurav";
-  home.homeDirectory = "/home/gaurav";
+  home.username = "jogi";
+  home.homeDirectory = "/home/jogi";
 
   home.packages = with pkgs; [
     kdePackages.kate
     gemini-cli
   ];
-
-  xdg.userDirs = {
-    enable = true;
-    createDirectories = true;
-  };
 
   home.customDirs = [
     ".config/sops/age"
@@ -75,8 +72,8 @@
     "personal/obsidian"
     "personal/projects"
     "personal/playground"
+    "personal/learn"
     "workspace"
-    "workspace/docs"
   ];
 
   home.sessionVariables = {

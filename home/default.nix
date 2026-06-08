@@ -22,6 +22,7 @@
     ./aerospace.nix
     ./mpv.nix
     ./spicetify.nix
+    ./thunar.nix
     ./sops.nix
     ./dirs.nix
   ];

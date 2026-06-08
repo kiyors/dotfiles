@@ -1,5 +1,4 @@
-# Those are my secrets, encrypted with sops
-# You shouldn't import this file, unless you edit it
+# hosts/grax/secrets/default.nix
 {
   config,
   pkgs,
@@ -45,7 +44,6 @@
     };
   };
 
-  systemd.user.services.mbsync.Unit.After = [ "sops-nix.service" ];
-
-  wayland.windowManager.hyprland.settings.exec-once = [ "systemctl --user start sops-nix" ];
+  # Ensure sops-nix is started on NixOS (for things like mbsync or SSH config)
+  # systemd.user.services.mbsync.Unit.After = [ "sops-nix.service" ];
 }

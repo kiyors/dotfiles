@@ -101,27 +101,11 @@
 
       # Define our hosts
       hosts = {
-        atlas = {
+        grax = {
           isNixos = true;
-          hostname = "atlas";
-          username = "gaurav";
+          hostname = "grax";
+          username = "jogi";
           system = lib.systems.x86_64-linux;
-        };
-        hades = {
-          isNixos = true;
-          hostname = "hades";
-          username = "gaurav";
-          system = lib.systems.x86_64-linux;
-          extraModules = [
-            disko.nixosModules.disko
-            ./hosts/hades/disko-config.nix
-          ];
-        };
-        coffee = {
-          isDarwin = true;
-          hostname = "coffee";
-          username = "gaurav";
-          system = lib.systems.aarch64-darwin;
         };
       };
 

@@ -16,7 +16,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "atlas";
+  networking.hostName = "grax";
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -38,9 +38,9 @@
   services.printing.enable = true;
 
   # Define a user account.
-  users.users."gaurav" = {
+  users.users."jogi" = {
     isNormalUser = true;
-    description = "Gaurav";
+    description = "jogi";
     extraGroups = [
       "networkmanager"
       "wheel"
@@ -71,7 +71,6 @@
     nixos = {
       docker.enable = true;
       fonts.enable = true;
-      nixld.enable = true;
       nix.enable = true;
       locale.enable = true;
       audio.enable = true;

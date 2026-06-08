@@ -1,9 +1,9 @@
 keys:
   - &users:
-    - &gaurav age1epwk66jtnh4vpg0eysfzpc8evyq4rx4ycyec37n9kgn88d8u7e4sfzvdfv
+    - &jogi age1kfw7yh3qhr42rh9kvwy3mazudjgrgpyn3w4n3g3jtxglqgxehdlszjyq32
 
 creation_rules:
   - path_regex: (secrets|hosts)/.*\.yaml$
     key_groups:
       - age:
-          - *gaurav
+          - *jogi
