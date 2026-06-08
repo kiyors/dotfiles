@@ -38,7 +38,7 @@ font-style-bold = default
 font-style-italic = default
 font-style-bold-italic = "Cartograph CF Bold Italic"
 font-synthetic-style = bold,italic,bold-italic
-font-size = 14
+font-size = 12
 font-thicken = true
 grapheme-width-method = unicode
 
@@ -68,24 +68,3 @@ keybind = alt+6=unbind
 keybind = alt+7=unbind
 keybind = alt+8=unbind
 keybind = alt+9=unbind
-
-# Unbind default tab switching with Super+numbers
-keybind = super+digit_1=unbind
-keybind = super+digit_2=unbind
-keybind = super+digit_3=unbind
-keybind = super+digit_4=unbind
-keybind = super+digit_5=unbind
-keybind = super+digit_6=unbind
-keybind = super+digit_7=unbind
-keybind = super+digit_8=unbind
-keybind = super+digit_9=unbind
-
-keybind = super+1=text:\x011
-keybind = super+2=text:\x012
-keybind = super+3=text:\x013
-keybind = super+4=text:\x014
-keybind = super+5=text:\x015
-keybind = super+6=text:\x016
-keybind = super+7=text:\x017
-keybind = super+8=text:\x018
-keybind = super+9=text:\x019
