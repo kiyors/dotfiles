@@ -44,7 +44,7 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 export _ZO_DATA_DIR="$XDG_CONFIG_HOME/zoxide"
 export SOPS_AGE_KEY_FILE="$XDG_CONFIG_HOME/sops/age/keys.txt"
 export EZA_CONFIG_DIR="$XDG_CONFIG_HOME/eza"
-export GOPATH="$XDG_DATA_HOME/go"
+export GOPATH="$XDG_CONFIG_HOME/go"
 
 # PATH
 export PATH="$HOME/.local/bin":$PATH

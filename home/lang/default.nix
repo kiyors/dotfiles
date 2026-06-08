@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
+    ./go.nix
     ./zig.nix
     ./node.nix
     ./rust.nix
