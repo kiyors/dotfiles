@@ -135,7 +135,7 @@
             "mole"
             "bun"
             # "sheets"
-            # "opencode"
+            "opencode"
             # "colima"
             # "docker"
             "libiconv"

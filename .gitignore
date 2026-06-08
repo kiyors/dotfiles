@@ -11,5 +11,6 @@ result-*
 .agents
 skills-lock.json
 .cache/
-/config/ghostty/config
+config/ghostty/config
 .claude/
+config/ghostty/config.backup
