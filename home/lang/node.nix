@@ -27,8 +27,8 @@ myLib.mkHomeModule {
       ];
 
       sessionVariables = {
-        # Suppress experimental warnings (e.g., when using newer node features)
-        NODE_OPTIONS = "--disable-warning=ExperimentalWarning";
+        # Suppress experimental and diagnostic warnings (common in Node 24+ with pnpm)
+        NODE_OPTIONS = "--disable-warning=ExperimentalWarning --no-warnings";
         PNPM_HOME = pnpmHome;
       };
 
@@ -48,6 +48,11 @@ myLib.mkHomeModule {
           prefix=${npmGlobalDir}
         '';
 
+        ".config/pnpm/config.yaml".text = ''
+          prefix: ${pnpmHome}
+          storeDir: ${pnpmHome}/store
+        '';
+
         # ".bunfig.toml".text = ''
         #   [runtime]
         #   logLevel = "debug"
@@ -63,7 +68,5 @@ myLib.mkHomeModule {
         # '';
       };
     };
-    home.file.".config/pnpm".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/pnpm";
   };
 }
