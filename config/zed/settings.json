@@ -9,6 +9,9 @@
 {
   "diff_view_style": "unified",
   "agent_servers": {
+    "opencode": {
+      "type": "registry"
+    },
     "gemini": {
       "type": "registry"
     }

@@ -14,3 +14,7 @@ skills-lock.json
 config/ghostty/config
 .claude/
 config/ghostty/config.backup
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
