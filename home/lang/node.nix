@@ -23,6 +23,7 @@ myLib.mkHomeModule {
         npm-check-updates
         npkill
         husky
+        deno
         biome
       ];
 

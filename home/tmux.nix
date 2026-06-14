@@ -30,5 +30,8 @@ myLib.mkHomeModule {
 
     home.file.".config/tmux".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/tmux";
+
+    home.file.".config/sesh".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/sesh";
   };
 }

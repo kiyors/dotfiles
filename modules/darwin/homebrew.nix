@@ -34,7 +34,6 @@
           taps = {
             "homebrew/homebrew-core" = inputs.homebrew-core;
             "homebrew/homebrew-cask" = inputs.homebrew-cask;
-            "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
           };
         };
 
@@ -94,7 +93,7 @@
           global.brewfile = true;
           onActivation = {
             autoUpdate = false;
-            cleanup = "uninstall";
+            cleanup = "none";
             extraFlags = [ "--force" ];
             upgrade = true;
           };
@@ -115,6 +114,7 @@
             "codex-app"
             "t3-code"
             "spotify"
+            "orbstack"
             "obsidian"
             # "motrix"
             # "gcloud-cli"
@@ -139,14 +139,14 @@
             # "sheets"
             "opencode"
             # "colima"
-            # "docker"
+            "docker"
             "libiconv"
             # "tesseract"
             # "gemini-cli"
             "tree-sitter"
-            # "docker-buildx"
+            "docker-buildx"
             # "tesseract-lang"
-            # "docker-compose"
+            "docker-compose"
             "tree-sitter-cli"
             # "netbirdio/tap/netbird"
             # "Arthur-Ficial/tap/apfel"
@@ -156,7 +156,8 @@
           masApps = {
             "WhatsApp Messenger" = 310633997;
             "Xcode" = 497799835;
-            "Apple Developer" = 640199958;
+            "apple developer" = 640199958;
+            "TestFlight" = 899247664;
           };
         };
       };

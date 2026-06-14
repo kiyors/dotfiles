@@ -98,7 +98,7 @@ if [[ -n "${commands[vivid]:-}" ]]; then
   _vivid_cache="$XDG_CACHE_HOME/zsh/vivid_ls_colors.zsh"
   if [[ ! -s "$_vivid_cache" || "${commands[vivid]}" -nt "$_vivid_cache" ]]; then
     [[ -d "$XDG_CACHE_HOME/zsh" ]] || mkdir -p "$XDG_CACHE_HOME/zsh"
-    if _vivid_out="$(vivid generate molokai 2>/dev/null)" && [[ -n "$_vivid_out" ]]; then
+    if _vivid_out="$(vivid generate catppuccin-mocha 2>/dev/null)" && [[ -n "$_vivid_out" ]]; then
       print -r -- "export LS_COLORS=\"$_vivid_out\"" > "$_vivid_cache.tmp" \
         && mv "$_vivid_cache.tmp" "$_vivid_cache"
     fi

@@ -1,0 +1,25 @@
+#:schema https://github.com/joshmedeski/sesh/raw/main/sesh.schema.json
+
+cache = true
+
+[default_session]
+# Optional: Set a nice preview command for your session picker using eza and bat
+preview_command = "eza --all --git --icons --color=always {}"
+
+[[session]]
+name            = "dotfiles"
+path            = "~/dotfiles"
+startup_command = "nvim"
+
+[[session]]
+name = "Downloads"
+path = "~/Downloads"
+
+[[session]]
+name = "Documents"
+path = "~/Documents"
+
+[[session]]
+name            = "dotfiles/nvim"
+path            = "~/dotfiles/config/nvim"
+startup_command = "tmux new-window -c \"#{pane_current_path}\" -d && nvim"

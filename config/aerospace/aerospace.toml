@@ -63,6 +63,7 @@ preset = 'qwerty'
 7  = [ 'secondary', 'main' ]
 8  = [ 'secondary', 'main' ]
 9  = [ 'secondary', 'main' ]
+o  = 'main'
 w  = 'main'
 
 [gaps]
@@ -132,7 +133,7 @@ alt-6 = 'workspace 6'
 alt-7 = 'workspace 7'
 alt-8 = 'workspace 8'
 alt-9 = 'workspace 9'
-alt-o = [ 'exec-and-forget open -a "Obsidian"', 'workspace w' ]
+alt-o = [ 'exec-and-forget open -a "Obsidian"', 'workspace o' ]
 alt-w = [ 'exec-and-forget open -a "WhatsApp"', 'workspace w' ]
 # alt-a = 'workspace A' # In your config, you can drop workspace bindings that you don't need
 # alt-b = 'workspace B'
