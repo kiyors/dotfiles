@@ -9,7 +9,7 @@ preview_command = "eza --all --git --icons --color=always {}"
 [[session]]
 name            = "dotfiles"
 path            = "~/dotfiles"
-startup_command = "nvim"
+startup_command = "tmux new-window -c \"#{pane_current_path}\" -d && nvim"
 
 [[session]]
 name = "Downloads"
