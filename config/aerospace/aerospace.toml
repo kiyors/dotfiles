@@ -133,6 +133,7 @@ alt-6 = 'workspace 6'
 alt-7 = 'workspace 7'
 alt-8 = 'workspace 8'
 alt-9 = 'workspace 9'
+alt-b = 'exec-and-forget open -n -a "Google Chrome" --args --profile-directory="Profile 2"'
 alt-o = [ 'exec-and-forget open -a "Obsidian"', 'workspace o' ]
 alt-w = [ 'exec-and-forget open -a "WhatsApp"', 'workspace w' ]
 # alt-a = 'workspace A' # In your config, you can drop workspace bindings that you don't need
