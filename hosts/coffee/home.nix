@@ -34,6 +34,7 @@
 
   cli = {
     tmux.enable = true;
+    lazydocker.enable = true;
   };
 
   shell = {
