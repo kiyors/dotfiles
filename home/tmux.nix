@@ -11,7 +11,15 @@ myLib.mkHomeModule {
   description = "Tmux with custom dotfiles symlink";
   config = {
     home.packages = with pkgs; [
-      sesh
+      (sesh.overrideAttrs (old: {
+        src = pkgs.fetchFromGitHub {
+          owner = "joshmedeski";
+          repo = "sesh";
+          rev = "main";
+          hash = "sha256-MqNwbWQ+zLFRQpwDBsiQSDj83Ef2OQAF5lRMSsWHUMI=";
+        };
+        vendorHash = "sha256-9IiDp/HaxXQAyNzuVBLiO+oIijBbdKBjssCmj8WV9V4=";
+      }))
       tmuxinator
       yq
     ];

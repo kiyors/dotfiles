@@ -29,7 +29,6 @@ myLib.mkHomeModule {
       starship
       zoxide
       lazygit
-      sesh
       tldr
       vivid
       yq

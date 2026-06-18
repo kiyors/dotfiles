@@ -13,7 +13,6 @@ myLib.mkHomeModule {
     home.packages = with pkgs; [
       ripgrep
       tldr
-      sesh
       yq
       fd
       zoxide
