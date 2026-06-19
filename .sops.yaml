@@ -1,6 +1,5 @@
 keys:
-  - &users:
-    - &gaurav age1epwk66jtnh4vpg0eysfzpc8evyq4rx4ycyec37n9kgn88d8u7e4sfzvdfv
+  - &gaurav age1epwk66jtnh4vpg0eysfzpc8evyq4rx4ycyec37n9kgn88d8u7e4sfzvdfv
 
 creation_rules:
   - path_regex: (secrets|hosts)/.*\.yaml$

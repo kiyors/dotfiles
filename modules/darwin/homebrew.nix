@@ -14,17 +14,17 @@
       name = "darwin.homebrew";
       description = "macOS Homebrew package manager setup";
       config = {
-        environment.systemPackages = with pkgs; [ pkg-config ];
         environment = {
+          systemPackages = with pkgs; [ pkg-config ];
           systemPath = [ "/opt/homebrew/bin" ];
           pathsToLink = [ "/Applications" ];
-        };
-        environment.variables = {
-          HOMEBREW_PREFIX = "/opt/homebrew";
-          HOMEBREW_CELLAR = "/opt/homebrew/Cellar";
-          HOMEBREW_REPOSITORY = "/opt/homebrew";
-          HOMEBREW_NO_INSTALL_FROM_API = "0";
-          HOMEBREW_INSTALL_FROM_API = "1";
+          variables = {
+            HOMEBREW_PREFIX = "/opt/homebrew";
+            HOMEBREW_CELLAR = "/opt/homebrew/Cellar";
+            HOMEBREW_REPOSITORY = "/opt/homebrew";
+            HOMEBREW_NO_INSTALL_FROM_API = "0";
+            HOMEBREW_INSTALL_FROM_API = "1";
+          };
         };
         nix-homebrew = {
           enable = true;
