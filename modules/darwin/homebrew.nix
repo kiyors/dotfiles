@@ -31,9 +31,13 @@
           user = "gaurav";
           enableRosetta = true;
           autoMigrate = false;
+          mutableTaps = false;
           taps = {
             "homebrew/homebrew-core" = inputs.homebrew-core;
             "homebrew/homebrew-cask" = inputs.homebrew-cask;
+            "mhaeuser/homebrew-mhaeuser" = inputs.homebrew-mhaeuser;
+            "netbirdio/homebrew-tap" = inputs.homebrew-netbirdio;
+            "Arthur-Ficial/homebrew-tap" = inputs.homebrew-arthur-ficial;
           };
         };
 
@@ -93,17 +97,11 @@
           global.brewfile = true;
           onActivation = {
             autoUpdate = false;
-            cleanup = "none";
+            cleanup = "uninstall";
             extraFlags = [ "--force" ];
             upgrade = true;
           };
-          taps = [
-            "homebrew/core"
-            "homebrew/cask"
-            "mhaeuser/mhaeuser"
-            "netbirdio/tap"
-            "Arthur-Ficial/tap"
-          ];
+          taps = builtins.attrNames config.nix-homebrew.taps;
           casks = [
             "iina"
             "blip"
@@ -118,12 +116,12 @@
             "obsidian"
             # "motrix"
             # "gcloud-cli"
-            "antigravity"
-            "antigravity-ide"
+            # "antigravity"
+            # "antigravity-ide"
             "antigravity-cli"
             "codex"
             "claude-code"
-            # "google-drive"
+            "google-drive"
             # "epic-games"
             "google-chrome"
             "brave-browser"

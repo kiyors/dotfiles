@@ -73,6 +73,7 @@
     { "personal/media" = "Movies/media"; }
     "personal/obsidian"
     "personal/projects"
+    "personal/projects/learn"
     "personal/playground"
     "workspace"
     "workspace/docs"

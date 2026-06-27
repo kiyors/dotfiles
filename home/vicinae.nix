@@ -17,13 +17,6 @@ myLib.mkHomeModule {
       systemd = {
         enable = true;
         autoStart = true;
-        environment = {
-          USE_LAYER_SHELL = 1;
-          XDG_DATA_DIRS = "${config.home.homeDirectory}/.nix-profile/share:/etc/profiles/per-user/${config.home.username}/share:/run/current-system/sw/share:/usr/share:${config.home.homeDirectory}/.local/share";
-          PATH = "${lib.makeBinPath [ pkgs.pulseaudio ]}:${
-            inputs.vicinae.packages.${pkgs.stdenv.hostPlatform.system}.default
-          }/libexec/vicinae:${config.home.homeDirectory}/.nix-profile/bin:/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin:/run/wrappers/bin";
-        };
       };
       settings = {
         close_on_focus_loss = true;
@@ -62,6 +55,13 @@ myLib.mkHomeModule {
         power-profile
         wifi-commander
       ];
+    };
+    systemd.user.services.vicinae.Service.Environment = lib.mkIf pkgs.stdenv.isLinux {
+      USE_LAYER_SHELL = "1";
+      XDG_DATA_DIRS = "${config.home.homeDirectory}/.nix-profile/share:/etc/profiles/per-user/${config.home.username}/share:/run/current-system/sw/share:/usr/share:${config.home.homeDirectory}/.local/share";
+      PATH = "${lib.makeBinPath [ pkgs.pulseaudio ]}:${
+        inputs.vicinae.packages.${pkgs.stdenv.hostPlatform.system}.default
+      }/libexec/vicinae:${config.home.homeDirectory}/.nix-profile/bin:/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin:/run/wrappers/bin";
     };
     home.packages = [ pkgs.pulseaudio ];
   };
