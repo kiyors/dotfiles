@@ -29,6 +29,18 @@
       url = "github:homebrew/homebrew-cask";
       flake = false;
     };
+    homebrew-mhaeuser = {
+      url = "github:mhaeuser/homebrew-mhaeuser";
+      flake = false;
+    };
+    homebrew-netbirdio = {
+      url = "github:netbirdio/homebrew-tap";
+      flake = false;
+    };
+    homebrew-arthur-ficial = {
+      url = "github:Arthur-Ficial/homebrew-tap";
+      flake = false;
+    };
     brew-nix = {
       url = "github:BatteredBunny/brew-nix";
       inputs.nix-darwin.follows = "nix-darwin";
@@ -82,6 +94,7 @@
     ghostty = {
       url = "github:ghostty-org/ghostty";
     };
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
   };
 
   outputs =
@@ -100,6 +113,12 @@
         atlas = {
           isNixos = true;
           hostname = "atlas";
+          username = "gaurav";
+          system = lib.systems.x86_64-linux;
+        };
+        titan = {
+          isNixos = true;
+          hostname = "titan";
           username = "gaurav";
           system = lib.systems.x86_64-linux;
         };
