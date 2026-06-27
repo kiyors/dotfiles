@@ -15,9 +15,14 @@ The secrets configuration is modular and portable:
 
 ---
 
-## 2. Generate an `age` keypair
+## 2. Generate or Use an `age` keypair
 
-Install `age`. Example:
+### Option A: Use your existing SSH key (Recommended)
+SOPS natively supports using standard SSH public keys (like `ssh-ed25519` or `ssh-rsa`) as `age` recipients. If you already use an SSH key, you can simply put its public key in `.sops.yaml` without generating a separate age keypair.
+When decrypting, SOPS will automatically try to use `~/.ssh/id_ed25519` or `~/.ssh/id_rsa` by default.
+
+### Option B: Generate a dedicated age key
+Install `age` and generate a keypair. Example:
 
 ```bash
 # install age (nix)
@@ -41,7 +46,7 @@ age-keygen -y ~/.config/sops/age/keys.txt
 
 If you are forking or using this config, you must replace the encryption recipients with your own public key:
 
-1. **Update `.sops.yaml`**: Replace the public key under `&gaurav` (or rename it) with your own public key generated in step 2.
+1. **Update `.sops.yaml`**: Replace the public key under `&gaurav` (or rename it) with your own public key generated in step 2 (or your SSH public key).
 2. **Create your secrets file**:
    ```bash
    # Create a new secrets file
@@ -52,7 +57,25 @@ If you are forking or using this config, you must replace the encryption recipie
 
 ---
 
-## 4. Host-Specific Secrets (Advanced)
+## 4. Managing and Updating Keys (Best Practices)
+
+When adding or removing recipients from `.sops.yaml`, you need to update the encrypted files:
+
+### Adding a new recipient
+Modify `.sops.yaml`, then run the `updatekeys` command on your encrypted file. This adds the new user/host without needing to decrypt the file manually:
+```bash
+sops updatekeys secrets/secrets.yaml
+```
+
+### Removing a recipient (Key Rotation)
+If you remove a recipient (especially if a key was compromised), you **must** rotate the data encryption key to ensure the removed user/host can no longer access the file. Run:
+```bash
+sops rotate -i secrets/secrets.yaml
+```
+
+---
+
+## 5. Host-Specific Secrets (Advanced)
 
 To prevent one compromised machine from accessing secrets for all other machines, we use host-specific encryption.
 
@@ -71,9 +94,10 @@ nix-shell -p ssh-to-age --run 'cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-ag
 
 ---
 
-## 5. Local key storage (recommended)
+## 6. Local key storage
 
 - `~/.config/sops/age/keys.txt` (standard for this repo)
+- Default macOS path if not overridden is `~/Library/Application Support/sops/age/keys.txt` (but our `sops.nix` enforces `~/.config/sops/age/keys.txt` universally).
 
 Ensure strict permissions:
 
@@ -84,7 +108,7 @@ chmod 600 ~/.config/sops/age/keys.txt
 
 ---
 
-## 6. TODO / Future Improvements
+## 7. TODO / Future Improvements
 
 See the detailed **[SOPS Roadmap](sops-roadmap.md)** for our plan to improve security through:
 - **Host-Specific Keys**: Isolate secrets between machines.
