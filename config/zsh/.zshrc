@@ -66,6 +66,9 @@ if (( $+commands[sheldon] )); then
   }
 fi
 
+# Add custom completions to fpath
+fpath=("$HOME/.config/zsh/completions" $fpath)
+
 # compinit (fast: -C uses cached dump, skips re-scan)
 autoload -Uz compinit && compinit -C
 _cached_eval carapace carapace _carapace

@@ -3,6 +3,13 @@
   email = gaurav23617@gmail.com
   signingkey = ~/.ssh/key.pub
 
+[sendemail]
+    smtpServer = smtp.gmail.com
+    smtpServerPort = 587
+    smtpEncryption = tls
+    smtpUser = gaurav23617@gmail.com
+    # Note: Use your generated App Password when prompted, not your Google password.
+
 [commit]
   gpgsign = true
   template = ~/.config/git/template
