@@ -24,6 +24,7 @@
     ./spicetify.nix
     ./sops.nix
     ./dirs.nix
+    ./hermes.nix
   ];
 
   editors = {
