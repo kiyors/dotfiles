@@ -29,7 +29,6 @@
   editors = {
     zed.enable = true;
     neovim.enable = true;
-    nvf.enable = true;
   };
 
   cli = {
@@ -61,6 +60,8 @@
   wm.aerospace.enable = true;
 
   terminal.ghostty.enable = true;
+
+  hermes-agent.enable = true;
 
   home.username = "gaurav";
   home.homeDirectory = "/Users/gaurav";
