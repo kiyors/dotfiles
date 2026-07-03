@@ -18,15 +18,18 @@
       doCheck = if final.stdenv.isDarwin then false else (oldAttrs.doCheck or true);
     });
 
-    # Fix Jeepney D-Bus test failures and import checks
-    # pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-    #   (python-final: python-prev: {
-    #     jeepney = python-prev.jeepney.overridePythonAttrs (oldAttrs: {
-    #       doInstallCheck = false;
-    #       doCheck = false;
-    #       pythonImportsCheck = [ "jeepney" ];
-    #     });
-    #   })
-    # ];
+    # Fix afdko test failures on Darwin (SIGTRAP)
+    afdko = prev.afdko.overrideAttrs (oldAttrs: {
+      doCheck = if final.stdenv.isDarwin then false else (oldAttrs.doCheck or true);
+    });
+
+    pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+      (python-final: python-prev: {
+        # Fix afdko test failures on Darwin (SIGTRAP) in pythonPackages
+        afdko = python-prev.afdko.overridePythonAttrs (oldAttrs: {
+          doCheck = if final.stdenv.isDarwin then false else (oldAttrs.doCheck or true);
+        });
+      })
+    ];
   };
 }

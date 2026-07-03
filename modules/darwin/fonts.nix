@@ -9,10 +9,6 @@ lib.mkModule {
   name = "darwin.fonts";
   description = "macOS system fonts configuration";
   config = {
-    fonts.packages =
-      (lib.commonFontPkgs pkgs)
-      ++ (with pkgs; [
-        cantarell-fonts
-      ]);
+    fonts.packages = lib.commonFontPkgs pkgs;
   };
 }
