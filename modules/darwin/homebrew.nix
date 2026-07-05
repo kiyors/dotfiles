@@ -114,7 +114,6 @@
             "spotify"
             "orbstack"
             "obsidian"
-            # "motrix"
             # "gcloud-cli"
             # "antigravity"
             # "antigravity-ide"

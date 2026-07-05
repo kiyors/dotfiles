@@ -10,7 +10,8 @@
   home.packages = with pkgs; [
     # spotiflac
     # spotidownloader
-    nyaa
+    # nyaa
+    motrix-next
   ];
 
   imports = [
@@ -61,7 +62,7 @@
 
   terminal.ghostty.enable = true;
 
-  hermes-agent.enable = true;
+  # hermes-agent.enable = true;
 
   home.username = "gaurav";
   home.homeDirectory = "/Users/gaurav";

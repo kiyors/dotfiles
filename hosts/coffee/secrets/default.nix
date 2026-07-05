@@ -39,12 +39,12 @@
       hermes_api_base_url = { };
     };
 
-  sops.templates."hermes-config.yaml" = {
-    path = "${config.home.homeDirectory}/.hermes/config.yaml";
-    content = ''
-      api_server:
-        base_url: "${config.sops.placeholder.hermes_api_base_url}"
-        key: "${config.sops.placeholder.hermes_api_key}"
-    '';
-  };
+  # sops.templates."hermes-config.yaml" = {
+  #   path = "${config.home.homeDirectory}/.hermes/config.yaml";
+  #   content = ''
+  #     api_server:
+  #       base_url: "${config.sops.placeholder.hermes_api_base_url}"
+  #       key: "${config.sops.placeholder.hermes_api_key}"
+  #   '';
+  # };
 }

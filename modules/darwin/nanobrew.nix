@@ -36,7 +36,6 @@
             "iina"
             "blip"
             # "bruno"
-            # "motrix"
             "raycast"
             "spotify"
             "obsidian"
