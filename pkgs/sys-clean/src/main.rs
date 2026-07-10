@@ -1,4 +1,5 @@
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::{Shell, generate};
 use colored::*;
 use std::process::Command;
 use sysinfo::System;
@@ -24,6 +25,11 @@ enum Commands {
     },
     /// Run system cleanup (nix store, etc.)
     SystemCleanup,
+    /// Generate shell completions
+    GenerateCompletion {
+        #[arg(value_enum)]
+        shell: Shell,
+    },
 }
 
 fn main() {
@@ -32,6 +38,11 @@ fn main() {
     match &cli.command {
         Commands::ReapZombies { targets, dry_run } => reap_zombies(targets, *dry_run),
         Commands::SystemCleanup => system_cleanup(),
+        Commands::GenerateCompletion { shell } => {
+            let mut cmd = Cli::command();
+            let name = cmd.get_name().to_string();
+            generate(*shell, &mut cmd, name, &mut std::io::stdout());
+        }
     }
 }
 
