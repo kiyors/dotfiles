@@ -10,16 +10,13 @@ These services are located in `modules/darwin/zombie-reaper.nix`.
 Sometimes, especially during web development with frameworks like Next.js or testing suites like Jest, closing a terminal or aborting a test doesn't properly kill the child processes. On macOS, these "orphaned" `jest-worker` Node processes get adopted by the system's root process (`launchd`, PID 1). Because they are stuck in a loop, they max out the CPU, generating heat and drastically draining the battery.
 
 ### What the agent does
-The `zombie-jest-reaper` is a launchd agent that runs automatically every **30 minutes** in the background. It looks for `jest-worker` processes that have been orphaned and terminates them.
+The `zombie-jest-reaper` is a launchd agent that runs automatically every **30 minutes** in the background. It uses a custom Rust tool (`sys-maintainer`) that scans system processes, looks for `jest-worker` nodes that have been orphaned, and terminates them.
 
 ### Is it safe? Will it kill my active `pnpm dev`?
 **Yes, it is 100% safe. It will NEVER kill your active dev environments.** 
-The script uses a very specific safeguard:
-```bash
-awk '$2 == 1 {print $1}'
-```
-This command checks the Parent Process ID (PPID) of the Node process. 
-- When you run `pnpm dev` or `npm test` normally, its parent is your terminal shell (e.g., `zsh`, `tmux`), so the PPID might be `40952`. The script **ignores** these.
+The Rust program uses a very specific safeguard:
+It checks the Parent Process ID (PPID) of the Node process using the cross-platform `sysinfo` crate.
+- When you run `pnpm dev` or `npm test` normally, its parent is your terminal shell (e.g., `zsh`, `tmux`), so the PPID might be `40952`. The program **ignores** these.
 - It only targets processes where the PPID is exactly `1`. A process only gets a PPID of `1` when its original parent window is destroyed but the process refused to close (an orphan/zombie). 
 
 ## 2. System Garbage Collector (`system-cleanup`)

@@ -5,12 +5,7 @@
     
     # 1. The Zombie Reaper (Runs every 30 minutes)
     "zombie-jest-reaper" = {
-      command = pkgs.writeShellScript "reap-zombies" ''
-        ${pkgs.procps}/bin/ps -eo pid,ppid,command | \
-          ${pkgs.gnugrep}/bin/grep '[j]est-worker/processChild.js' | \
-          ${pkgs.gawk}/bin/awk '$2 == 1 {print $1}' | \
-          ${pkgs.findutils}/bin/xargs -I {} kill -9 {} 2>/dev/null || true
-      '';
+      command = "${pkgs.sysMaintainer}/bin/sys-maintainer reap-zombies";
       
       serviceConfig = {
         StartInterval = 1800; # 30 minutes
@@ -29,10 +24,8 @@
           source '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
         fi
         
-        # Run your cleanup commands
-        nh clean darwin
-        nh clean all
-        mo clean
+        # Run system cleanup using the rust maintainer
+        ${pkgs.sysMaintainer}/bin/sys-maintainer system-cleanup
       '';
       
       serviceConfig = {
