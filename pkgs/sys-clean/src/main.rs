@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use colored::*;
 use std::process::Command;
 use sysinfo::System;
 
@@ -43,6 +44,8 @@ fn send_macos_notification(title: &str, message: &str) {
 }
 
 fn reap_zombies(targets: &[String], dry_run: bool) {
+    println!("{}", "🧟 Starting Zombie Reaper...".cyan().bold());
+
     let mut sys = System::new_all();
     sys.refresh_all();
 
@@ -66,37 +69,63 @@ fn reap_zombies(targets: &[String], dry_run: bool) {
             if matches_target {
                 let cpu_usage = process.cpu_usage();
                 println!(
-                    "Found zombie process: {} (PID: {}) using {:.1}% CPU",
-                    process.name().to_string_lossy(),
-                    pid,
-                    cpu_usage
+                    "{} {} (PID: {}) using {} CPU",
+                    "⚠️  Found zombie process:".yellow(),
+                    process.name().to_string_lossy().bold(),
+                    pid.to_string().cyan(),
+                    format!("{:.1}%", cpu_usage).red().bold()
                 );
 
                 if dry_run {
-                    println!("[DRY RUN] Would have killed zombie process (PID: {})", pid);
+                    println!(
+                        "   {} Would have killed zombie process (PID: {})",
+                        "[DRY RUN]".magenta().bold(),
+                        pid.to_string().cyan()
+                    );
                 } else if process.kill() {
-                    println!("Successfully killed zombie process (PID: {})", pid);
+                    println!(
+                        "   {} Successfully killed zombie process (PID: {})",
+                        "✅".green(),
+                        pid.to_string().cyan()
+                    );
                     killed_count += 1;
                 } else {
-                    eprintln!("Failed to kill zombie process (PID: {})", pid);
+                    eprintln!(
+                        "   {} Failed to kill zombie process (PID: {})",
+                        "❌".red(),
+                        pid.to_string().cyan()
+                    );
                 }
             }
         }
     }
 
+    println!("{}", "─".repeat(50).bright_black());
     if killed_count > 0 {
-        println!("Reaped {} zombie(s).", killed_count);
+        println!(
+            "{} Reaped {} zombie(s).",
+            "✨".green(),
+            killed_count.to_string().bold()
+        );
         send_macos_notification(
             "System Maintainer",
             &format!("Reaped {} orphaned background process(es) 🧟", killed_count),
         );
     } else {
-        println!("No zombies found matching targets: {:?}", targets);
+        println!(
+            "{} No zombies found matching targets: {:?}",
+            "💤".blue(),
+            targets
+        );
     }
 }
 
 fn system_cleanup() {
-    println!("Running system garbage collection...");
+    println!(
+        "{}",
+        "🧹 Running system garbage collection...".cyan().bold()
+    );
+    println!("{}", "─".repeat(50).bright_black());
 
     let cmds = vec![
         ("nh", vec!["clean", "darwin"]),
@@ -105,18 +134,37 @@ fn system_cleanup() {
     ];
 
     for (cmd, args) in cmds {
-        println!("Executing: {} {:?}", cmd, args);
+        println!("{} {} {:?}", "▶".blue(), cmd.bold(), args);
         match Command::new(cmd).args(&args).status() {
             Ok(status) if status.success() => {
-                println!("Successfully executed {} {:?}", cmd, args);
+                println!(
+                    "  {} Successfully executed {} {:?}",
+                    "✅".green(),
+                    cmd.bold(),
+                    args
+                );
             }
             Ok(status) => {
-                eprintln!("Command {} {:?} exited with status: {}", cmd, args, status);
+                eprintln!(
+                    "  {} Command {} {:?} exited with status: {}",
+                    "❌".red(),
+                    cmd.bold(),
+                    args,
+                    status.to_string().red()
+                );
             }
             Err(e) => {
-                eprintln!("Failed to execute {} {:?}: {}", cmd, args, e);
+                eprintln!(
+                    "  {} Failed to execute {} {:?}: {}",
+                    "💥".red().bold(),
+                    cmd.bold(),
+                    args,
+                    e.to_string().red()
+                );
             }
         }
     }
-    println!("System cleanup complete.");
+
+    println!("{}", "─".repeat(50).bright_black());
+    println!("{}", "✨ System cleanup complete.".green().bold());
 }
