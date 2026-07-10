@@ -4,8 +4,8 @@
   launchd.user.agents = {
     
     # 1. The Zombie Reaper (Runs every 30 minutes)
-    "zombie-jest-reaper" = {
-      command = "${pkgs.sysMaintainer}/bin/sys-maintainer reap-zombies";
+    "zombie-reaper" = {
+      command = "${pkgs.sysMaintainer}/bin/sys-maintainer reap-zombies -t jest-worker -t node -t tsc -t esbuild -t python -t rust-analyzer -t cargo -t rustc -t go -t ruby";
       
       serviceConfig = {
         StartInterval = 1800; # 30 minutes

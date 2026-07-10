@@ -4,13 +4,13 @@ This document outlines the automated background tasks configured in macOS (`laun
 
 These services are located in `modules/darwin/zombie-reaper.nix`.
 
-## 1. Zombie Reaper (`zombie-jest-reaper`)
+## 1. Zombie Reaper (`zombie-reaper`)
 
 ### The Problem
-Sometimes, especially during web development with frameworks like Next.js or testing suites like Jest, closing a terminal or aborting a test doesn't properly kill the child processes. On macOS, these "orphaned" `jest-worker` Node processes get adopted by the system's root process (`launchd`, PID 1). Because they are stuck in a loop, they max out the CPU, generating heat and drastically draining the battery.
+Sometimes, especially during web or backend development, closing a terminal or aborting a test doesn't properly kill the child processes. On macOS, these "orphaned" developer processes (like Node, Python, Rust, etc.) get adopted by the system's root process (`launchd`, PID 1). Because they are stuck in a loop, they max out the CPU, generating heat and drastically draining the battery.
 
 ### What the agent does
-The `zombie-jest-reaper` is a launchd agent that runs automatically every **30 minutes** in the background. It uses a custom Rust tool (`sys-maintainer`) that scans system processes, looks for `jest-worker` nodes that have been orphaned, and terminates them.
+The `zombie-reaper` is a launchd agent that runs automatically every **30 minutes** in the background. It uses a custom Rust tool (`sys-maintainer`) that scans system processes, looks for orphaned developer nodes (e.g., `jest-worker`, `node`, `tsc`, `python`, `rust-analyzer`), and terminates them.
 
 ### Is it safe? Will it kill my active `pnpm dev`?
 **Yes, it is 100% safe. It will NEVER kill your active dev environments.** 
