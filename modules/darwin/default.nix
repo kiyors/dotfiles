@@ -13,5 +13,6 @@
     ./fonts.nix
     ./determinateNix.nix
     ./nix.nix
+    ./zombie-reaper.nix
   ];
 }

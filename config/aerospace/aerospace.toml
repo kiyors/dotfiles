@@ -17,6 +17,11 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 # See: https://nikitabobko.github.io/AeroSpace/guide#layouts
 # The 'accordion-padding' specifies the size of accordion padding
 # You can set 0 to disable the padding feature
+# Opt-in to config-version 2 (see https://nikitabobko.github.io/AeroSpace/guide#config-version)
+config-version = 2
+# Add explicit persistent-workspaces since they are no longer inferred from keybindings in v2
+persistent-workspaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'o', 'w']
+
 accordion-padding = 30
 
 # Possible values: tiles|accordion
