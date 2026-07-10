@@ -11,8 +11,12 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Kill orphaned jest-worker node processes that are eating CPU
-    ReapZombies,
+    /// Kill orphaned node processes that are eating CPU
+    ReapZombies {
+        /// Target string to match in the command line (default: "jest-worker")
+        #[arg(short, long, default_value = "jest-worker")]
+        target: String,
+    },
     /// Run system cleanup (nix store, etc.)
     SystemCleanup,
 }
@@ -21,13 +25,17 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::ReapZombies => reap_zombies(),
+        Commands::ReapZombies { target } => reap_zombies(target),
         Commands::SystemCleanup => system_cleanup(),
     }
 }
 
-fn reap_zombies() {
+fn reap_zombies(target: &str) {
     let mut sys = System::new_all();
+    sys.refresh_all();
+
+    // Refresh again slightly later to get accurate CPU usage readings
+    std::thread::sleep(std::time::Duration::from_millis(200));
     sys.refresh_all();
 
     let mut killed_count = 0;
@@ -40,11 +48,13 @@ fn reap_zombies() {
                 .map(|s| s.to_string_lossy().into_owned())
                 .collect();
             let cmd_str = cmd.join(" ");
-            if cmd_str.contains("jest-worker") {
+            if cmd_str.contains(target) {
+                let cpu_usage = process.cpu_usage();
                 println!(
-                    "Found zombie process: {} (PID: {})",
+                    "Found zombie process: {} (PID: {}) using {:.1}% CPU",
                     process.name().to_string_lossy(),
-                    pid
+                    pid,
+                    cpu_usage
                 );
                 if process.kill() {
                     println!("Successfully killed zombie process (PID: {})", pid);
@@ -57,7 +67,7 @@ fn reap_zombies() {
     }
 
     if killed_count == 0 {
-        println!("No zombie jest-workers found.");
+        println!("No zombie '{}' processes found.", target);
     } else {
         println!("Reaped {} zombie(s).", killed_count);
     }
