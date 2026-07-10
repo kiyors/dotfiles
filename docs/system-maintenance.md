@@ -12,6 +12,11 @@ Sometimes, especially during web or backend development, closing a terminal or a
 ### What the agent does
 The `zombie-reaper` is a launchd agent that runs automatically every **30 minutes** in the background. It uses a custom Rust tool (`sys-maintainer`) that scans system processes, looks for orphaned developer nodes (e.g., `jest-worker`, `node`, `tsc`, `python`, `rust-analyzer`), and terminates them.
 
+### Key Features
+- **Native macOS Notifications**: When the tool finds and reaps a zombie, it triggers a native macOS desktop notification (e.g. "Reaped 3 orphaned background process(es) 🧟") so you know it's working. If no zombies are found, it stays completely silent.
+- **Multiple Targets**: The `--target` (or `-t`) flag can be passed multiple times. The Nix configuration easily tracks multiple developer tools at once (like `node`, `python`, `cargo`, `go`, etc.).
+- **Dry Run Mode**: You can test the tool manually without killing anything by running `sys-maintainer reap-zombies --dry-run`. It will scan the system and print exactly what it *would* have killed, including the PID and CPU usage.
+
 ### Is it safe? Will it kill my active `pnpm dev`?
 **Yes, it is 100% safe. It will NEVER kill your active dev environments.** 
 The Rust program uses a very specific safeguard:
