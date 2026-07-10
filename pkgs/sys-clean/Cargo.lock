@@ -246,7 +246,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sys-maintainer"
+name = "sys-clean"
 version = "0.1.0"
 dependencies = [
  "clap",

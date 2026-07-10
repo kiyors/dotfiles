@@ -1,13 +1,13 @@
 { pkgs, rustPlatform, ... }:
 
 rustPlatform.buildRustPackage {
-  pname = "sys-maintainer";
+  pname = "sys-clean";
   version = "0.1.0";
 
-  src = ./sys-maintainer;
+  src = ./sys-clean;
 
   cargoLock = {
-    lockFile = ./sys-maintainer/Cargo.lock;
+    lockFile = ./sys-clean/Cargo.lock;
   };
 
   meta = with pkgs.lib; {
@@ -15,6 +15,6 @@ rustPlatform.buildRustPackage {
     homepage = "https://github.com/gaurav/dotfiles";
     license = licenses.mit;
     maintainers = [ ];
-    mainProgram = "sys-maintainer";
+    mainProgram = "sys-clean";
   };
 }

@@ -5,7 +5,7 @@
     
     # 1. The Zombie Reaper (Runs every 30 minutes)
     "zombie-reaper" = {
-      command = "${pkgs.sysMaintainer}/bin/sys-maintainer reap-zombies -t jest-worker -t node -t tsc -t esbuild -t python -t rust-analyzer -t cargo -t rustc -t go -t ruby";
+      command = "${pkgs.sysClean}/bin/sys-clean reap-zombies -t jest-worker -t node -t tsc -t esbuild -t python -t rust-analyzer -t cargo -t rustc -t go -t ruby";
       
       serviceConfig = {
         StartInterval = 1800; # 30 minutes
@@ -25,7 +25,7 @@
         fi
         
         # Run system cleanup using the rust maintainer
-        ${pkgs.sysMaintainer}/bin/sys-maintainer system-cleanup
+        ${pkgs.sysClean}/bin/sys-clean system-cleanup
       '';
       
       serviceConfig = {
