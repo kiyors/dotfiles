@@ -1,11 +1,13 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   launchd.user.agents = {
     
-    # 1. The Zombie Reaper (Runs every 30 minutes)
+    # 1. Reap stale, CPU-heavy developer processes adopted by launchd.
     "zombie-reaper" = {
-      command = "${pkgs.sysClean}/bin/sys-clean reap-zombies -t jest-worker -t node -t tsc -t esbuild -t python -t rust-analyzer -t cargo -t rustc -t go -t ruby";
+      # Generic runtime names (node, python, ruby, etc.) are deliberately omitted:
+      # PPID 1 is not, by itself, proof that a process is unwanted.
+      command = "${pkgs.sysClean}/bin/sys-clean reap-zombies --quiet --min-age 900 --min-cpu 25 --grace-period 5 -t jest-worker -t tsc -t esbuild -t rust-analyzer";
       
       serviceConfig = {
         StartInterval = 1800; # 30 minutes
@@ -13,35 +15,36 @@
         StandardErrorPath = "/tmp/zombie-reaper.err";
         StandardOutPath = "/tmp/zombie-reaper.out";
         ProcessType = "Background";
+        LowPriorityIO = true;
+        Nice = 10;
       };
     };
 
-    # 2. System Garbage Collector (Runs every 3 days)
-    "system-cleanup" = {
-      command = pkgs.writeShellScript "system-cleanup" ''
-        # Load the nix environment variables just in case launchd doesn't have them
-        if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
-          source '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-        fi
-        
-        # Run system cleanup using the rust maintainer
-        ${pkgs.sysClean}/bin/sys-clean system-cleanup
-      '';
-      
-      serviceConfig = {
-        # 3 days in seconds (3 * 24 * 60 * 60 = 259200)
-        StartInterval = 259200;
-        
-        # Run it once at startup as well, just to ensure it fires if you reboot often
-        RunAtLoad = true; 
-        
-        # Logs are helpful to verify it's working
-        StandardErrorPath = "/tmp/system-cleanup.err";
-        StandardOutPath = "/tmp/system-cleanup.out";
-        
-        # Let macOS throttle this during heavy usage so it doesn't slow you down
-        ProcessType = "Background"; 
+  };
+
+  # System generations are root-owned, so this must not be a user agent.
+  launchd.daemons."system-cleanup" = {
+    command = pkgs.writeShellScript "system-cleanup" ''
+      export PATH=${lib.makeBinPath [ pkgs.nh ]}:/usr/bin:/bin
+
+      # Broad cache removal is intentionally not automated: warm caches improve
+      # application performance and are recreated after deletion.
+      ${pkgs.sysClean}/bin/sys-clean system-cleanup --quiet --keep-generations 5 --keep-since 14d
+    '';
+
+    serviceConfig = {
+      # Sunday at 04:00. StartCalendarInterval jobs delayed by sleep run on wake.
+      StartCalendarInterval = {
+        Weekday = 0;
+        Hour = 4;
+        Minute = 0;
       };
+
+      StandardErrorPath = "/tmp/system-cleanup.err";
+      StandardOutPath = "/tmp/system-cleanup.out";
+      ProcessType = "Background";
+      LowPriorityIO = true;
+      Nice = 15;
     };
   };
 }

@@ -2,7 +2,7 @@
 
 rustPlatform.buildRustPackage {
   pname = "sys-clean";
-  version = "0.1.0";
+  version = "0.2.0";
 
   src = ./sys-clean;
 
@@ -20,7 +20,7 @@ rustPlatform.buildRustPackage {
   '';
 
   meta = with pkgs.lib; {
-    description = "Custom system maintenance utility for macOS to reap orphaned Node processes and run GC";
+    description = "System maintenance utility for safely reaping stale developer processes and running GC";
     homepage = "https://github.com/gaurav/dotfiles";
     license = licenses.mit;
     maintainers = [ ];
