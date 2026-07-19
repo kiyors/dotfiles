@@ -43,6 +43,7 @@ myLib.mkHomeModule {
         selene
         biome
         uv
+        typescript-go
         gopls
         gofumpt
         stylua

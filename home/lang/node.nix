@@ -25,6 +25,10 @@ myLib.mkHomeModule {
         husky
         deno
         biome
+        oxfmt
+        oxlint
+        tsgolint
+        typescript-go
       ];
 
       sessionVariables = {

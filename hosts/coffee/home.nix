@@ -11,7 +11,7 @@
     # spotiflac
     # spotidownloader
     # nyaa
-    motrix-next
+    # motrix-next
   ];
 
   imports = [

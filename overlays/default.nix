@@ -6,7 +6,6 @@
   # https://wiki.nixos.org/wiki/Overlays
   modifications = final: prev: {
     # motrix-next = (import ./motrix-next.nix final prev).motrix-next;
-
     nh = inputs.nh.packages.${final.stdenv.hostPlatform.system}.default;
 
     stable = import inputs.nixpkgs-stable {
@@ -24,6 +23,9 @@
     afdko = prev.afdko.overrideAttrs (oldAttrs: {
       doCheck = if final.stdenv.isDarwin then false else (oldAttrs.doCheck or true);
     });
+
+    # Workaround for autoraise build failure on macOS 14+ due to cctools linker crash
+    autoraise = if final.stdenv.isDarwin then final.stable.autoraise else prev.autoraise;
 
     pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
       (python-final: python-prev: {
