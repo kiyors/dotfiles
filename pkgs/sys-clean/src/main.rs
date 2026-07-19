@@ -189,7 +189,8 @@ fn reap_zombies(
         );
     }
 
-    let mut sys = System::new_all();
+    let mut sys = System::new();
+    sys.refresh_processes(ProcessesToUpdate::All, true);
     // Process CPU usage is a delta and needs two samples.
     std::thread::sleep(Duration::from_millis(500));
     sys.refresh_processes(ProcessesToUpdate::All, true);
@@ -198,21 +199,26 @@ fn reap_zombies(
         .processes()
         .iter()
         .filter_map(|(pid, process)| {
+            let cpu_usage = process.cpu_usage();
+            let age = process.run_time();
+            let is_orphan = process.parent().is_some_and(|parent| parent.as_u32() == 1);
+
+            if !(is_orphan && age >= min_age && cpu_usage >= min_cpu) {
+                return None;
+            }
+
             let command = process
                 .cmd()
                 .iter()
                 .map(|part| part.to_string_lossy())
                 .collect::<Vec<_>>()
                 .join(" ");
-            let cpu_usage = process.cpu_usage();
-            let age = process.run_time();
-            let is_orphan = process.parent().is_some_and(|parent| parent.as_u32() == 1);
 
-            (is_orphan
-                && age >= min_age
-                && cpu_usage >= min_cpu
-                && command_matches(&command, targets))
-            .then(|| Candidate {
+            if !command_matches(&command, targets) {
+                return None;
+            }
+
+            Some(Candidate {
                 pid: *pid,
                 start_time: process.start_time(),
                 name: process.name().to_string_lossy().into_owned(),
