@@ -7,6 +7,9 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "context_servers": {
+    
+  },
   "diff_view_style": "unified",
   "agent_servers": {
     "antigravity-acp": {
@@ -26,6 +29,10 @@
     "dock": "left",
   },
   "agent": {
+    "tool_permissions": {
+      "default": "allow",
+      "tools": {}
+    },
     "dock": "left",
     "favorite_models": [],
     "model_parameters": [],
@@ -70,11 +77,5 @@
     "Nix": {
       "language_servers": ["nixd", "!nil"],
     },
-  },
-  "context_servers": {
-    "posthog": {
-      "enabled": true,
-      "url": "https://mcp.posthog.com/mcp"
-    }
   },
 }

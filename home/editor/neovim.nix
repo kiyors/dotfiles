@@ -57,6 +57,9 @@ myLib.mkHomeModule {
         ripgrep
         wordnet
         imagemagick
+        ghostscript
+        tectonic
+        mermaid-cli
         libiconv
       ];
 

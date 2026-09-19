@@ -14,25 +14,33 @@ myLib.mkHomeModule {
   config = {
     programs.vicinae = {
       enable = true;
+      package = pkgs.vicinae;
       systemd = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
         enable = true;
         autoStart = true;
       };
+      launchd = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+        enable = true;
+        autoStart = true;
+        environment = {
+          PATH = "${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+        };
+      };
       settings = {
+        "$schema" = "https://vicinae.com/schemas/config.json";
         close_on_focus_loss = true;
         consider_preedit = true;
-        pop_to_root_on_close = true;
+        pop_to_root_on_close = false;
+        escape_key_behavior = "close_window";
         favicon_service = "twenty";
         search_files_in_root = true;
-        providers = {
-          applications = {
-            enabled = true;
-          };
+        global_shortcuts = {
+          toggle = if pkgs.stdenv.hostPlatform.isDarwin then "cmd+SPACE" else "alt+SPACE";
         };
         font = {
           normal = {
-            size = 12;
-            family = "Maple Mono";
+            family = "JetBrainsMono Nerd Font Propo";
+            size = 13;
           };
         };
         theme = {
@@ -46,7 +54,29 @@ myLib.mkHomeModule {
           };
         };
         launcher_window = {
-          opacity = 0.98;
+          compact_mode = {
+            enabled = true;
+          };
+          material = "liquid_glass";
+          opacity = 0.83;
+        };
+        providers = {
+          applications = {
+            enabled = true;
+          };
+          clipboard = {
+            entrypoints = {
+              history = {
+                shortcut = if pkgs.stdenv.hostPlatform.isDarwin then "alt+v" else "super+v";
+              };
+            };
+          };
+          "@knoopx/vicinae-extension-nix-0" = {
+            preferences = {
+              homeManagerOptionsUrl = "https://home-manager-options.extranix.com/data/options-master.json";
+              searchUrl = "https://search.nixos.org/backend/latest-48-nixos-unstable/_search";
+            };
+          };
         };
       };
       extensions =
@@ -63,13 +93,13 @@ myLib.mkHomeModule {
           )
         );
     };
-    systemd.user.services.vicinae.Service.Environment = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
-      USE_LAYER_SHELL = "1";
-      XDG_DATA_DIRS = "${config.home.homeDirectory}/.nix-profile/share:/etc/profiles/per-user/${config.home.username}/share:/run/current-system/sw/share:/usr/share:${config.home.homeDirectory}/.local/share";
-      PATH = "${lib.makeBinPath [ pkgs.pulseaudio ]}:${
-        inputs.vicinae.packages.${pkgs.stdenv.hostPlatform.system}.default
-      }/libexec/vicinae:${config.home.homeDirectory}/.nix-profile/bin:/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin:/run/wrappers/bin";
-    };
+    systemd.user.services.vicinae.Service.Environment = lib.mkIf pkgs.stdenv.hostPlatform.isLinux [
+      "USE_LAYER_SHELL=1"
+      "XDG_DATA_DIRS=${config.home.homeDirectory}/.nix-profile/share:/etc/profiles/per-user/${config.home.username}/share:/run/current-system/sw/share:/usr/share:${config.home.homeDirectory}/.local/share"
+      "PATH=${
+        lib.makeBinPath [ pkgs.pulseaudio ]
+      }:${pkgs.vicinae}/libexec/vicinae:${config.home.homeDirectory}/.nix-profile/bin:/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin:/run/wrappers/bin"
+    ];
     home.packages = lib.mkIf pkgs.stdenv.hostPlatform.isLinux [ pkgs.pulseaudio ];
   };
 }

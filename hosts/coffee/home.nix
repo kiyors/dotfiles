@@ -62,6 +62,10 @@
   };
   secrets.sops.enable = true;
 
+  desktop = {
+    vicinae.enable = true;
+  };
+
   wm.aerospace.enable = true;
 
   terminal.ghostty.enable = true;

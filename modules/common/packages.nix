@@ -12,7 +12,6 @@ lib.mkModule {
     environment.systemPackages = with pkgs; [
       vim
       curl
-      neovim
       wget
       home-manager
       fd

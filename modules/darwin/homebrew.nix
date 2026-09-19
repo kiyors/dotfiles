@@ -95,7 +95,7 @@
 
           # Trust non-official taps for casks
           if [ -x /opt/homebrew/bin/brew ]; then
-            sudo -u gaurav /opt/homebrew/bin/brew trust --tap abue-ammar/tinycast 2>/dev/null || true
+            sudo -u gaurav /opt/homebrew/bin/brew trust abue-ammar/tinycast augani/dory 2>/dev/null || true
           fi
         '';
 
@@ -137,7 +137,7 @@
             # "helium-browser"
             "keyboardcleantool"
             "Augani/dory/dory"
-            "abue-ammar/tinycast/tinycast"
+            # "abue-ammar/tinycast/tinycast"
             # "netbirdio/tap/netbird-ui"
             # "mhaeuser/mhaeuser/battery-toolkit"
           ];

@@ -122,20 +122,22 @@ rec {
       ++ lib.optionals withHomeManager [
         home-manager.darwinModules.home-manager
         inputs.determinate.darwinModules.default
-        {
+        ({ pkgs, ... }: {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.extraSpecialArgs = {
             inherit inputs self;
             myLib = self.lib;
           };
-          home-manager.backupFileExtension = "backup";
+          home-manager.backupCommand = pkgs.writeShellScript "home-manager-backup" ''
+            exec ${pkgs.coreutils}/bin/mv --backup=numbered -- "$1" "$1.backup"
+          '';
           home-manager.users.${username} = {
             imports = [ ../hosts/${hostname}/home.nix ];
             home.username = lib.mkForce username;
             home.homeDirectory = lib.mkForce "/Users/${username}";
           };
-        }
+        })
       ]
       ++ extraModules;
     };
