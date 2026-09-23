@@ -8,5 +8,7 @@
     ./python.nix
     ./php.nix
     ./lua.nix
+    ./kotlin.nix
+    ./java.nix
   ];
 }

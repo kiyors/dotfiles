@@ -38,6 +38,6 @@ Installation steps and secret-handling have moved out of this README into `docs/
 - `docs/installation.md` — platform-specific installation steps (macOS & Linux), including the Nix _experimental_ flakes command examples.
 - `docs/secrets.md` — SOPS `age` key setup and how secrets are handled (sops-nix usage, where to store keys, example encrypt/decrypt commands).
 
-If you want, I can also create a short `CONTRIBUTING.md` later explaining how to add new hosts or packages.
+For information on the architecture, adding new hosts, or creating modules, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
