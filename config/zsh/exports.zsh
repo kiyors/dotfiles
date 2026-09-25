@@ -133,7 +133,7 @@ Darwin)
   fi
 
   # Ensure standard system tools are explicitly discoverable
-  export PATH="/usr/bin:/usr/sbin:/usr/local/bin:$PATH"
+  export PATH="/opt/homebrew/bin:/usr/bin:/usr/sbin:$PATH"
 
   # Ensure your local environment always clears a path for the standalone toolchain
   unset SDKROOT

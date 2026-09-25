@@ -47,6 +47,9 @@ inline = 'export ZSH_PNPM_NO_ALIASES="true"'
 apply  = [ "defer" ]
 github = "michakfromparis/zsh-pnpm-completions"
 
+[plugins.pnpm-pn-completion]
+inline = 'zsh-defer compdef _pnpm_completion pn'
+
 # Override pnpm script completion (must run after zsh-pnpm-completions)
 [plugins.pnpm-scripts-override]
 inline = 'zsh-defer source "$HOME/.config/zsh/pnpm-scripts-override.zsh"'
