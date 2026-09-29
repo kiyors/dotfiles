@@ -8,6 +8,7 @@
 {
   imports = [
     ../../modules
+    inputs.kache.darwinModules.default
   ];
 
   ids.gids.nixbld = 350;
@@ -46,5 +47,10 @@
     description = "Gaurav";
     home = "/Users/gaurav";
     shell = pkgs.zsh;
+  };
+
+  services.kache = {
+    enable = true;
+    daemon.enable = true;
   };
 }

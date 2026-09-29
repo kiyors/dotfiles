@@ -122,6 +122,7 @@
             "spotify"
             "wispr-flow"
             # "orbstack"
+            "robbietilton-compositor"
             "obsidian"
             # "gcloud-cli"
             "antigravity"

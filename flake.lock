@@ -52,11 +52,11 @@
     "brew-api": {
       "flake": false,
       "locked": {
-        "lastModified": 1790209354,
-        "narHash": "sha256-MGLe63/ly+MHA96G0ktcc1sPUGQak5GkgU5mOhk2slI=",
+        "lastModified": 1790638904,
+        "narHash": "sha256-r+FOvrRNGwYEje/i9xuw1E+rVMSG4qn9pbsZqZ1V5Lw=",
         "owner": "BatteredBunny",
         "repo": "brew-api",
-        "rev": "edab29cc8c88ee3b423f9e7f3a25be4171ce23db",
+        "rev": "77862fa5561de520d621122440f33a1c9d0b9e19",
         "type": "github"
       },
       "original": {
@@ -94,11 +94,11 @@
     "brew-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1790200116,
-        "narHash": "sha256-wcnk/FM0cHBPJ3loHUKUVJThMyiyyqnhbkhDfAYNLBk=",
+        "lastModified": 1790583381,
+        "narHash": "sha256-NSH3Eqz/fM8Vlxmivl2EAs67ZEhOQvHHXW7XiGwf5nQ=",
         "owner": "Homebrew",
         "repo": "brew",
-        "rev": "27af95f6a334817dfc67703582a4dae87cc7f614",
+        "rev": "cc9ff034b1d98cdd4061f68cf715bb967c483a8f",
         "type": "github"
       },
       "original": {
@@ -427,11 +427,11 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1790217652,
-        "narHash": "sha256-rn66ljuS9+x1JHqCVNcGWsot0HZ5fxULcEp2rYDMmIk=",
+        "lastModified": 1790639216,
+        "narHash": "sha256-MdNNp81mr+k1aHfe7Y6MRuhJq8AtDV3Lw0uLt1V6cjQ=",
         "owner": "homebrew",
         "repo": "homebrew-cask",
-        "rev": "170b98963b4a401994e128f881fa594b0680a689",
+        "rev": "e1e3ec9f3b9fc6b71d366809be9a7e7643b7626b",
         "type": "github"
       },
       "original": {
@@ -443,11 +443,11 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1790225220,
-        "narHash": "sha256-Yz/I8wvuFs8pda8tbKb1md7c9gwWhgk4b3uo4sMgWmE=",
+        "lastModified": 1790643516,
+        "narHash": "sha256-4i5vx+8pMqvPOjQFE7tw/N6GeDeAIRyC0TnfZX+KfPI=",
         "owner": "homebrew",
         "repo": "homebrew-core",
-        "rev": "39166a68dac29c3a15bdf1e0f4054eb2440a9ab6",
+        "rev": "feb6c61f342af5aa919d3266d7c810ff63c31807",
         "type": "github"
       },
       "original": {
@@ -825,6 +825,28 @@
         "type": "github"
       }
     },
+    "kache": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay",
+        "treefmt-nix": "treefmt-nix"
+      },
+      "locked": {
+        "lastModified": 1790631263,
+        "narHash": "sha256-b7VYHJzA4fSnzuj+xr2m3+RKzIpNXbhns1rhsDzzFxI=",
+        "owner": "kunobi-ninja",
+        "repo": "kache",
+        "rev": "43b0c3dfac02522e029c29f9b6602694ff4e0bf1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunobi-ninja",
+        "repo": "kache",
+        "type": "github"
+      }
+    },
     "nanobrew-src": {
       "flake": false,
       "locked": {
@@ -970,7 +992,7 @@
         "nix-darwin": "nix-darwin_2",
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-nixcord": "nixpkgs-nixcord",
-        "treefmt-nix": "treefmt-nix"
+        "treefmt-nix": "treefmt-nix_2"
       },
       "locked": {
         "lastModified": 1789700180,
@@ -1282,6 +1304,7 @@
         "homebrew-netbirdio": "homebrew-netbirdio",
         "homebrew-tinycast": "homebrew-tinycast",
         "hyprland": "hyprland",
+        "kache": "kache",
         "nix-cachyos-kernel": "nix-cachyos-kernel",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
@@ -1295,6 +1318,27 @@
         "vicinae": "vicinae",
         "vicinae-extensions": "vicinae-extensions",
         "zen-browser": "zen-browser"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "kache",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1788248235,
+        "narHash": "sha256-siCQqLbY7AbZ9V3oyc65K8bhNr7QgZTXoqLTws3pv0s=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "6a84c41e705533dcc5569ac0731f18406b4cdf86",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "sops-nix": {
@@ -1437,6 +1481,27 @@
       }
     },
     "treefmt-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "kache",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784369104,
+        "narHash": "sha256-47cxbcZODibHv3rELFQ9vZly0vUNkND/atn/U7HLeb0=",
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "rev": "df3c0640565d04a0261253cdd89fce78ec50168a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "treefmt-nix_2": {
       "inputs": {
         "nixpkgs": [
           "nixcord",
