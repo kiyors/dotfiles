@@ -82,6 +82,22 @@
             xcode-select --switch /Applications/Xcode.app/Contents/Developer
             xcodebuild -license accept || true
 
+            # Install Xcode system components (CoreSimulator.framework, etc.) when
+            # first launch is pending. Without these, xcodebuild cannot load
+            # IDESimulatorFoundation and every xcodebuild invocation spews
+            # "Library not loaded: /Library/Developer/PrivateFrameworks/CoreSimulator.framework".
+            if ! xcodebuild -checkFirstLaunchStatus &>/dev/null; then
+              echo "Running Xcode first launch (installing system components)..."
+              xcodebuild -runFirstLaunch || true
+              if xcodebuild -checkFirstLaunchStatus &>/dev/null; then
+                echo "✓ Xcode system components: installed"
+              else
+                echo "⚠️  Xcode first launch incomplete. Run manually: sudo xcodebuild -runFirstLaunch"
+              fi
+            else
+              echo "✓ Xcode system components: up-to-date"
+            fi
+
             # ⬇️ ADD THIS LINE HERE ⬇️
             echo "Ensuring Metal Toolchain component is installed..."
             xcodebuild -downloadComponent MetalToolchain || true
@@ -122,21 +138,21 @@
             "spotify"
             "wispr-flow"
             # "orbstack"
-            "robbietilton-compositor"
+            # "robbietilton-compositor"
             "obsidian"
             # "gcloud-cli"
-            "antigravity"
+            # "antigravity"
             # "antigravity-ide"
             "antigravity-cli"
-            "codex"
+            # "codex"
             # "claude-code"
-            "google-drive"
+            # "google-drive"
             # "epic-games"
             "google-chrome"
             # "brave-browser"
             # "helium-browser"
-            "keyboardcleantool"
-            "Augani/dory/dory"
+            # "keyboardcleantool"
+            # "Augani/dory/dory"
             # "abue-ammar/tinycast/tinycast"
             # "netbirdio/tap/netbird-ui"
             # "mhaeuser/mhaeuser/battery-toolkit"
@@ -150,7 +166,7 @@
             "opencode"
             # "colima"
             "docker"
-            "ollama"
+            # "ollama"
             "libiconv"
             "container"
             "tesseract"

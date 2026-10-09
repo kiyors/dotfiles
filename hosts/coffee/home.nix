@@ -14,7 +14,7 @@
     # spotidownloader
     # nyaa
     # motrix-next
-    moviebox-tui
+    # moviebox-tui
     # recordly
   ];
 
@@ -39,7 +39,7 @@
   cli = {
     enable = true;
     tmux.enable = true;
-    herdr.enable = true;
+    herdr.enable = false;
     lazydocker.enable = true;
   };
 

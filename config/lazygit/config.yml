@@ -15,11 +15,12 @@ git:
     - command: delta --dark --paging=never --line-numbers --hyperlinks --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
 
 gui:
-  authorColors:
-    "gaurav2361": "#ffa500"
-    "kiyors": "#ffa500"
-    "Gaurav": "#ffa500"
-    "Gaurav メ": "#ffa500"
+  theme:
+    authorColors:
+      "gaurav2361": "#ffa500"
+      "kiyors": "#ffa500"
+      "Gaurav": "#ffa500"
+      "Gaurav メ": "#ffa500"
   showIcons: true
   showFileIcons: true
   showListFooter: true
