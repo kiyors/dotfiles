@@ -6,8 +6,7 @@ session_path=$(tmux display-message -t "$session_name" -p "#{session_path}")
 # Calculate desired name
 desired_name=""
 if [[ "$session_path" == "$HOME/workspace" ]]; then
-  desird_name="ndow -c "#{pane_current_path}" && tmux send-keys -t 2 nvim C-m
-    workspace"
+  desired_name="workspace"
 elif [[ "$session_path" == "$HOME/workspace/"* ]]; then
   parent=$(basename "$(dirname "$session_path")")
   base=$(basename "$session_path")

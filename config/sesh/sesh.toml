@@ -3,14 +3,32 @@
 cache      = false
 dir_length = 2
 
+sort_order = [ "tmux", [ "config", "zoxide" ] ]
+
 [default_session]
 # Optional: Set a nice preview command for your session picker using eza and bat
 preview_command = "eza --all --git --icons --color=always {}"
 
+[tui]
+group_separator = true
+show_windows    = true
+
 [[session]]
-name            = "dotfiles"
-path            = "~/dotfiles"
-startup_command = "tmux new-window -c \"#{pane_current_path}\" && tmux send-keys -t 2 nvim C-m"
+alias              = "df"
+alias_auto_connect = true
+name               = "dotfiles"
+path               = "~/dotfiles"
+windows            = [ "editor" ]
+
+[[session]]
+alias   = "nvim"
+name    = "dotfiles/nvim"
+path    = "~/dotfiles/config/nvim"
+windows = [ "editor" ]
+
+[[window]]
+name           = "editor"
+startup_script = "nvim"
 
 [[session]]
 name = "Downloads"
@@ -21,10 +39,6 @@ name = "Documents"
 path = "~/Documents"
 
 [[session]]
-name = "workspace"
-path = "~/workspace"
-
-[[session]]
-name            = "dotfiles/nvim"
-path            = "~/dotfiles/config/nvim"
-startup_command = "tmux new-window -c \"#{pane_current_path}\" && tmux send-keys -t 2 nvim C-m"
+alias = "ws"
+name  = "workspace"
+path  = "~/workspace"

@@ -11,14 +11,10 @@ RES=$(sesh list -H -z --icons | fzf-tmux -p 55%,60% \
     --bind 'ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
     --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list -t --icons)' \
     --preview-window 'right:55%' \
-    --preview 'sesh preview {}')
+    --preview 'sesh preview --watch {}')
 
 if [ -z "$RES" ]; then
     exit 0
 fi
 
-if [[ "$RES" == *"/dotfiles/config/nvim" ]]; then
-    sesh connect "dotfiles/nvim"
-else
-    sesh connect "$RES"
-fi
+sesh connect "$RES"
