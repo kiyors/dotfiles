@@ -49,6 +49,10 @@
       url = "github:abue-ammar/homebrew-tinycast";
       flake = false;
     };
+    homebrew-crmne = {
+      url = "github:crmne/homebrew-tap";
+      flake = false;
+    };
     brew-nix = {
       url = "github:BatteredBunny/brew-nix";
       inputs.nix-darwin.follows = "nix-darwin";

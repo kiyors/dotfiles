@@ -5,7 +5,8 @@
 
   # https://wiki.nixos.org/wiki/Overlays
   modifications = final: prev: {
-    # motrix-next = (import ./motrix-next.nix final prev).motrix-next;
+    # rayburst = (import ./rayburst.nix final prev).rayburst;
+    # motrix-next = final.rayburst;
 
     stable = import inputs.nixpkgs-stable {
       system = final.stdenv.hostPlatform.system;
@@ -23,7 +24,19 @@
       doCheck = if final.stdenv.hostPlatform.isDarwin then false else (oldAttrs.doCheck or true);
     });
 
+    # Fix go-mockery checkPhase failure (incompatible export data format with newer Go)
+    go-mockery = prev.go-mockery.overrideAttrs (_: {
+      doCheck = false;
+    });
 
+    # Fix sesh build failure: mockery fails under Go 1.27, but sesh compiles without it
+    sesh = prev.sesh.overrideAttrs (oldAttrs: {
+      preBuild = "";
+      doCheck = false;
+      nativeBuildInputs = builtins.filter (x: (x.pname or "") != "go-mockery") (
+        oldAttrs.nativeBuildInputs or [ ]
+      );
+    });
 
     pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
       (python-final: python-prev: {

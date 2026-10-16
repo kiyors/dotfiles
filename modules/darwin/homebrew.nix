@@ -40,6 +40,7 @@
             "Arthur-Ficial/homebrew-tap" = inputs.homebrew-arthur-ficial;
             "augani/homebrew-dory" = inputs.homebrew-augani;
             "abue-ammar/homebrew-tinycast" = inputs.homebrew-tinycast;
+            "crmne/homebrew-tap" = inputs.homebrew-crmne;
           };
         };
 
@@ -111,7 +112,7 @@
 
           # Trust non-official taps for casks
           if [ -x /opt/homebrew/bin/brew ]; then
-            sudo -u gaurav /opt/homebrew/bin/brew trust abue-ammar/tinycast augani/dory 2>/dev/null || true
+            sudo -u gaurav /opt/homebrew/bin/brew trust abue-ammar/tinycast augani/dory crmne/tap 2>/dev/null || true
           fi
         '';
 
@@ -136,6 +137,7 @@
             "vorssaint"
             # "t3-code"
             "spotify"
+            # "crmne/tap/spotifast"
             "wispr-flow"
             # "orbstack"
             # "robbietilton-compositor"

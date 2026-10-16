@@ -13,7 +13,7 @@
     # spotiflac
     # spotidownloader
     # nyaa
-    # motrix-next
+    rayburst
     # moviebox-tui
     # recordly
   ];
