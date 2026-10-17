@@ -24,6 +24,11 @@
       doCheck = if final.stdenv.hostPlatform.isDarwin then false else (oldAttrs.doCheck or true);
     });
 
+    # Fix atuin e2e_capture test failure on Darwin (issue #573527)
+    atuin = prev.atuin.overrideAttrs (oldAttrs: {
+      doCheck = if final.stdenv.hostPlatform.isDarwin then false else (oldAttrs.doCheck or true);
+    });
+
     # Fix go-mockery checkPhase failure (incompatible export data format with newer Go)
     go-mockery = prev.go-mockery.overrideAttrs (_: {
       doCheck = false;
