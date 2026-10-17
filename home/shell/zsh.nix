@@ -48,11 +48,17 @@ myLib.mkHomeModule {
       '';
     };
 
-    home.file.".config/zsh".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/zsh";
+    home.file = {
+      ".config/zsh".source =
+        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/zsh";
 
-    home.file.".config/sheldon".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/sheldon";
+      ".config/sheldon".source =
+        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/sheldon";
+    }
+    // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+      ".config/mole".source =
+        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/config/mole";
+    };
 
     home.activation.initZsh = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       $DRY_RUN_CMD mkdir -p $HOME/.cache/zsh

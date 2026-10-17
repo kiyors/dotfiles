@@ -6,7 +6,7 @@
   spotidownloader = pkgs.callPackage ./spotidownloader.nix { };
   spotiflac = pkgs.callPackage ./spotiflac.nix { };
   superCmd = pkgs.callPackage ./supercmd.nix { };
-  sysClean = pkgs.callPackage ./sys-clean.nix { };
+  coffee = pkgs.callPackage ./coffee.nix { };
   recordly = pkgs.callPackage ./recordly.nix { };
   kache = pkgs.callPackage ./kache.nix { };
   # tinycast = pkgs.callPackage ./tinycast.nix { };

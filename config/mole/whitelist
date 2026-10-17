@@ -1,2 +1,3 @@
-# Mole Whitelist - Empty whitelist (no paths protected)
-# Saved selections replace optional defaults; built-in macOS safety protections still apply.
+# Mole Whitelist - Protected paths won't be deleted
+# Saved selections replace optional defaults; built-in safety protections still apply.
+# Add one pattern per line to keep items safe.

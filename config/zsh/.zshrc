@@ -69,8 +69,28 @@ fi
 # Add custom completions to fpath
 fpath=("$HOME/.config/zsh/completions" $fpath)
 
+# Nix packages ship their zsh completions under <pkg>/share/zsh/site-functions.
+# Profiles are already on PATH, so mirror those completions onto fpath: this is
+# what makes `coffee <TAB>` (and `co <TAB>`) offer clean, doctor, reap-zombies,
+# generate-completion and the flags. No subprocess is spawned, and the paths are
+# resolved per shell start so a rebuild never leaves a stale store path behind.
+for profile in ${(z)NIX_PROFILES}; do
+  fpath+=("$profile"/share/zsh/site-functions(N/))
+done
+fpath=($fpath(N/))
+
 # compinit (fast: -C uses cached dump, skips re-scan)
 autoload -Uz compinit && compinit -C
+
+# `coffee` must win the `co` name: zsh's own RCS completion (_rcs) also declares
+# `#compdef co`, and whichever file compinit happens to read last wins. Binding
+# both names explicitly means `co <TAB>` offers clean, doctor, reap-zombies,
+# --deep and the rest, regardless of which completion file was scanned first.
+if (( $+functions[_coffee] )); then
+  compdef _coffee coffee
+  compdef _coffee co
+fi
+
 _cached_eval carapace carapace _carapace
 
 # Keybindings

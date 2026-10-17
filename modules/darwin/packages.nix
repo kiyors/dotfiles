@@ -13,7 +13,7 @@ lib.mkModule {
       luarocks
       nixfmt
       harper
-      sysClean
+      coffee
     ];
   };
 }
