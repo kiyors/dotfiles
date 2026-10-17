@@ -153,6 +153,11 @@ co clean -d
 # Deduplicate the Nix store only:
 co clean --optimise
 
+# Everything at once: no generation retention, project artifacts, global
+# garbage collection, store deduplication and /tmp. Destructive and slow:
+co clean --all --dry-run
+co clean --all
+
 # Clean stale /tmp clutter (nix-shell, nix-develop, scratch files) only:
 co clean-tmp --dry-run
 co clean-tmp

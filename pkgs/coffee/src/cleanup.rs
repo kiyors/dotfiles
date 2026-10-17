@@ -37,15 +37,15 @@ pub fn plan(args: &CleanupArgs) -> Vec<PlannedCommand> {
         "clean".to_string(),
         "all".to_string(),
         "--keep".to_string(),
-        args.keep_generations.to_string(),
+        args.effective_keep_generations().to_string(),
         "--keep-since".to_string(),
-        args.keep_since.trim().to_string(),
+        args.effective_keep_since().to_string(),
     ];
 
-    if args.optimise {
+    if args.optimise() {
         nh_args.push("--optimise".into());
     }
-    if !args.clean_gcroots {
+    if !args.clean_gcroots() {
         nh_args.push("--no-gcroots".into());
         nh_args.push("--no-direnv".into());
     }
@@ -58,7 +58,7 @@ pub fn plan(args: &CleanupArgs) -> Vec<PlannedCommand> {
 
     let mut commands = vec![PlannedCommand::new("nh", &nh_args)];
 
-    if args.deep {
+    if args.deep() {
         let mo_args: &[&str] = if args.dry_run {
             &["clean", "--dry-run"]
         } else {
@@ -67,7 +67,7 @@ pub fn plan(args: &CleanupArgs) -> Vec<PlannedCommand> {
         commands.push(PlannedCommand::new("mo", mo_args));
     }
 
-    if args.deep || args.purge_projects {
+    if args.purge() {
         let purge_args: &[&str] = if args.dry_run {
             &["purge", "--dry-run"]
         } else {
@@ -76,7 +76,7 @@ pub fn plan(args: &CleanupArgs) -> Vec<PlannedCommand> {
         commands.push(PlannedCommand::new("mo", purge_args));
     }
 
-    if args.collect_garbage {
+    if args.gc() {
         let gc_args: &[&str] = if args.dry_run {
             &["nix-collect-garbage", "-d", "--dry-run"]
         } else {
@@ -87,7 +87,7 @@ pub fn plan(args: &CleanupArgs) -> Vec<PlannedCommand> {
 
     // `nh --optimise` above only flags the store for deduplication; the actual
     // pass needs root. Never schedule it for real during a preview.
-    if args.optimise && !args.dry_run {
+    if args.optimise() && !args.dry_run {
         commands.push(PlannedCommand::new("sudo", &["nix-store", "--optimise"]));
     }
 
@@ -212,7 +212,7 @@ pub fn run(args: &CleanupArgs) -> bool {
              `co clean --deep --dry-run`",
         );
     }
-    if args.collect_garbage && !args.dry_run {
+    if args.gc() && !args.dry_run {
         ui::warn(
             "`nix-collect-garbage -d` deletes every old Nix generation system-wide; \
              rolling back to a previous system or profile will no longer be possible",
@@ -270,12 +270,12 @@ pub fn run(args: &CleanupArgs) -> bool {
     }
 
     // Call out anything a dry run deliberately withheld.
-    if args.optimise && args.dry_run && !args.quiet {
+    if args.optimise() && args.dry_run && !args.quiet {
         ui::step("sudo", &["nix-store".into(), "--optimise".into()]);
         ui::dry_run("Would execute sudo nix-store --optimise");
     }
 
-    if args.deep && succeeded {
+    if args.deep() && succeeded {
         if !args.quiet {
             ui::rule();
             ui::heading(if args.dry_run {
@@ -295,7 +295,7 @@ pub fn run(args: &CleanupArgs) -> bool {
         deep::flush_macos_caches(args.dry_run, args.quiet);
     }
 
-    if (args.deep || args.clean_tmp) && succeeded {
+    if (args.deep() || args.clean_tmp()) && succeeded {
         if !args.quiet {
             ui::rule();
             ui::heading(if args.dry_run {
@@ -308,6 +308,13 @@ pub fn run(args: &CleanupArgs) -> bool {
         let tmp_stats = tmp::clean(args.dry_run, args.quiet, args.tmp_min_age);
         stats.tmp_items = tmp_stats.removed + tmp_stats.skipped;
         stats.direct_bytes += tmp_stats.bytes;
+    }
+
+    if args.all && !args.quiet {
+        ui::warn(
+            "`--all` removed every Nix generation and every project build \
+             artifact. There is no undo beyond what `co space` can re-scan.",
+        );
     }
 
     stats.free_after = crate::space::total_free();
@@ -361,6 +368,7 @@ mod tests {
             quiet: false,
             no_stats: true,
             tmp_min_age: 86_400,
+            all: false,
             no_notify: true,
         }
     }
@@ -482,6 +490,7 @@ mod tests {
         a.deep = true;
 
         let commands = plan(&a);
+        assert_eq!(commands.len(), 3, "unexpected plan: {commands:?}");
         assert_eq!(
             commands[1],
             PlannedCommand::new("mo", &["clean"]),

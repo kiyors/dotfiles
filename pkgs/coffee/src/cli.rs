@@ -154,6 +154,11 @@ pub struct CleanupArgs {
     #[arg(short, long, default_value_t = false)]
     pub quiet: bool,
 
+    /// Full clean: no generation retention, and every phase (caches, project
+    /// artifacts, garbage collection, store optimisation, /tmp). Destructive.
+    #[arg(long, default_value_t = false)]
+    pub all: bool,
+
     /// Do not print the closing summary table of space reclaimed
     #[arg(long, default_value_t = false)]
     pub no_stats: bool,
@@ -169,13 +174,50 @@ pub struct CleanupArgs {
 
 impl CleanupArgs {
     pub fn validate(&self) -> Result<(), String> {
-        if self.keep_generations == 0 {
-            return Err("--keep-generations must be at least 1".into());
+        if !self.all && self.keep_generations == 0 {
+            return Err("--keep-generations must be at least 1 (or use --all)".into());
         }
-        if self.keep_since.trim().is_empty() {
+        if !self.all && self.keep_since.trim().is_empty() {
             return Err("--keep-since cannot be empty".into());
         }
         Ok(())
+    }
+
+    /// `--all` implies every destructive phase and full generation removal.
+    pub fn deep(&self) -> bool {
+        self.all || self.deep
+    }
+
+    pub fn purge(&self) -> bool {
+        self.all || self.deep || self.purge_projects
+    }
+
+    pub fn gc(&self) -> bool {
+        self.all || self.collect_garbage
+    }
+
+    pub fn optimise(&self) -> bool {
+        self.all || self.optimise
+    }
+
+    pub fn clean_tmp(&self) -> bool {
+        self.all || self.clean_tmp
+    }
+
+    pub fn clean_gcroots(&self) -> bool {
+        self.all || self.clean_gcroots
+    }
+
+    pub fn effective_keep_generations(&self) -> u32 {
+        if self.all { 0 } else { self.keep_generations }
+    }
+
+    pub fn effective_keep_since(&self) -> &str {
+        if self.all {
+            "0h"
+        } else {
+            self.keep_since.trim()
+        }
     }
 }
 

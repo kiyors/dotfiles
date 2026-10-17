@@ -144,6 +144,9 @@ const TOOLS: &[ToolCheck] = &[
 ];
 
 struct AgentCheck {
+    /// Short name used in the report.
+    name: &'static str,
+    /// Full launchd label, which nix-darwin prefixes with `org.nixos.`.
     label: &'static str,
     plist: &'static str,
     /// `gui` agents need the numeric uid appended to the domain.
@@ -152,13 +155,15 @@ struct AgentCheck {
 
 const AGENTS: &[AgentCheck] = &[
     AgentCheck {
-        label: "zombie-reaper",
-        plist: "Library/LaunchAgents/zombie-reaper.plist",
+        name: "zombie-reaper",
+        label: "org.nixos.zombie-reaper",
+        plist: "Library/LaunchAgents/org.nixos.zombie-reaper.plist",
         domain: "gui",
     },
     AgentCheck {
-        label: "system-cleanup",
-        plist: "/Library/LaunchDaemons/system-cleanup.plist",
+        name: "system-cleanup",
+        label: "org.nixos.system-cleanup",
+        plist: "/Library/LaunchDaemons/org.nixos.system-cleanup.plist",
         domain: "system",
     },
 ];
@@ -300,7 +305,7 @@ fn check_agents(report: &mut Report) {
         if !plist.is_file() {
             report.push(
                 Section::Agents,
-                agent.label,
+                agent.name,
                 Status::Info,
                 format!("not installed (no {})", plist.display()),
             );
@@ -313,7 +318,7 @@ fn check_agents(report: &mut Report) {
                 None => {
                     report.push(
                         Section::Agents,
-                        agent.label,
+                        agent.name,
                         Status::Warn,
                         "installed, but the user id could not be read",
                     );
@@ -334,14 +339,14 @@ fn check_agents(report: &mut Report) {
         if loaded {
             report.push(
                 Section::Agents,
-                agent.label,
+                agent.name,
                 Status::Ok,
                 format!("installed and loaded ({target})"),
             );
         } else {
             report.push(
                 Section::Agents,
-                agent.label,
+                agent.name,
                 Status::Warn,
                 format!("installed at {} but not loaded", plist.display()),
             );
