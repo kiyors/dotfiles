@@ -7,6 +7,7 @@
 use crate::cli::CleanupArgs;
 use crate::deep;
 use crate::notify;
+use crate::reap;
 use crate::tmp;
 use crate::ui;
 use colored::Colorize;
@@ -290,7 +291,12 @@ pub fn run(args: &CleanupArgs) -> bool {
                  add it via `mo clean --whitelist`",
             );
         }
-        stats.dev_cache_bytes += deep::clean_dev_caches(args.dry_run, args.quiet);
+
+        // One process snapshot for the whole phase. Sampling per cache would
+        // walk the entire process table once per cache, and this is the slowest
+        // part of a deep clean.
+        let system = reap::sample_processes();
+        stats.dev_cache_bytes += deep::clean_dev_caches(args.dry_run, args.quiet, &system);
         deep::brew_cleanup(args.dry_run, args.quiet);
         deep::flush_macos_caches(args.dry_run, args.quiet);
     }

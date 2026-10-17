@@ -3,15 +3,22 @@
 let
   inherit (pkgs) lib;
 
-  # Only the manifest, lockfile and sources are needed to build. A fileset keeps
-  # `target/`, editor droppings and stray scratch files out of the store, which
-  # `cleanSourceWith` filtering by basename does not reliably guarantee.
+  # Only the workspace manifests, the lockfile and the member sources are needed
+  # to build. A fileset keeps `target/`, editor droppings and stray scratch files
+  # out of the store, which `cleanSourceWith` filtering by basename does not
+  # reliably guarantee.
+  #
+  # This is a Cargo workspace: the root manifest and `Cargo.lock` live at the
+  # flake root, so both must be included alongside the member's own files.
+  # The Rust package itself lives in crate/coffee, keeping Rust sources
+  # separate from the Nix packaging in pkgs/.
   src = lib.fileset.toSource {
-    root = ./coffee;
+    root = ./..;
     fileset = lib.fileset.unions [
-      ./coffee/Cargo.toml
-      ./coffee/Cargo.lock
-      ./coffee/src
+      ../Cargo.toml
+      ../Cargo.lock
+      ../crate/coffee/Cargo.toml
+      ../crate/coffee/src
     ];
   };
 in
@@ -22,7 +29,7 @@ rustPlatform.buildRustPackage {
   inherit src;
 
   cargoLock = {
-    lockFile = ./coffee/Cargo.lock;
+    lockFile = ./../Cargo.lock;
   };
 
   nativeBuildInputs = [ pkgs.installShellFiles ];

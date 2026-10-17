@@ -238,14 +238,15 @@ pub fn find_candidates(system: &System, args: &ReapArgs) -> Vec<Candidate> {
     candidates
 }
 
-/// Whether any running process's command line contains `fragment`.
+/// Whether any process already in `system` has a command line containing
+/// `fragment`.
 ///
 /// Used by deep cleanup to avoid deleting a build cache out from under a build
-/// that is still running.
-pub fn any_process_matches(fragment: &str) -> bool {
-    let mut system = System::new();
-    system.refresh_processes_specifics(ProcessesToUpdate::All, true, refresh_kind());
-
+/// that is still running. Takes a snapshot the caller already holds rather than
+/// sampling its own, because deep cleanup checks several caches and each sample
+/// walks the whole process table.
+pub fn any_process_matches(system: &System, fragment: &str) -> bool {
+    let targets = [fragment.to_string()];
     system.processes().values().any(|process| {
         let command = process
             .cmd()
@@ -253,7 +254,7 @@ pub fn any_process_matches(fragment: &str) -> bool {
             .map(|part| part.to_string_lossy())
             .collect::<Vec<_>>()
             .join(" ");
-        command_matches(&command, std::slice::from_ref(&fragment.to_string()))
+        command_matches(&command, &targets)
     })
 }
 

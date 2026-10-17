@@ -1,0 +1,17 @@
+[workspace]
+members = [ "crate/coffee" ]
+resolver = "2"
+
+# Size and link-time optimisation. This tool is I/O bound (it spawns child
+# processes and sleeps between samples), so the smaller `opt-level = "z"` costs
+# no measurable speed while cutting the binary roughly in half. LTO plus a
+# single codegen unit is what actually removes the dead code; `strip` drops the
+# symbol table that would otherwise dominate the remainder.
+#
+# Profiles must be declared at the workspace root — a `[profile]` section in a
+# member manifest is ignored with a warning.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true

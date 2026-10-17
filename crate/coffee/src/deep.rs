@@ -7,6 +7,7 @@ use crate::reap;
 use crate::tool;
 use crate::ui;
 use std::path::PathBuf;
+use sysinfo::System;
 
 /// A global build cache that is safe to remove only when nothing is using it.
 pub struct DevCache {
@@ -43,7 +44,7 @@ pub fn dev_caches() -> Vec<DevCache> {
 /// Caches belonging to a tool that is currently running are skipped: deleting
 /// `~/.gradle/daemon` under a live Gradle daemon breaks in-flight builds.
 /// Returns the total bytes that were (or in a dry run, would be) freed.
-pub fn clean_dev_caches(dry_run: bool, quiet: bool) -> u64 {
+pub fn clean_dev_caches(dry_run: bool, quiet: bool, system: &System) -> u64 {
     let mut freed = 0;
 
     for cache in dev_caches() {
@@ -51,7 +52,7 @@ pub fn clean_dev_caches(dry_run: bool, quiet: bool) -> u64 {
             continue;
         }
 
-        if reap::any_process_matches(cache.busy_marker) {
+        if reap::any_process_matches(system, cache.busy_marker) {
             if !quiet {
                 ui::warn(format!(
                     "Skipping {} — a `{}` process is running",
