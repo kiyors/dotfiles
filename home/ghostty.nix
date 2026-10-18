@@ -2,7 +2,6 @@
   myLib,
   lib,
   config,
-  inputs,
   pkgs,
   ...
 }:
@@ -12,7 +11,7 @@ myLib.mkHomeModule {
   description = "ghostty terminal";
   config = {
     home.packages = lib.optionals pkgs.stdenv.hostPlatform.isLinux [
-      inputs.ghostty.packages."${pkgs.stdenv.hostPlatform.system}".default
+      pkgs.ghostty
     ];
 
     home.file = {
