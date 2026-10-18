@@ -10,6 +10,11 @@ let
       config,
       globalConfig,
       imports ? [ ],
+      # Extra options declared alongside the generated `enable` flag. Keys
+      # are absolute paths from the config root, so they merge onto the
+      # `enable` attrset rather than replacing it. `recursiveUpdate` is
+      # required: `//` is a shallow merge and would drop `enable`.
+      options ? { },
       enableDefault ? false,
     }:
     let
@@ -27,7 +32,7 @@ let
           lib.mkEnableOption description;
     in
     {
-      options = lib.setAttrByPath pathParts { enable = enableOption; };
+      options = lib.recursiveUpdate (lib.setAttrByPath pathParts { enable = enableOption; }) options;
       config = lib.mkIf (lib.attrByPath enablePath enableDefault globalConfig) config;
     }
     // lib.optionalAttrs (imports != [ ]) { inherit imports; };

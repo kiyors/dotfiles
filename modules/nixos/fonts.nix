@@ -36,6 +36,9 @@ lib.mkModule {
           nerd-fonts.meslo-lg
           maple-mono.truetype
           maple-mono.NF-unhinted
+          poppins
+          nerd-fonts.jetbrains-mono
+          material-design-icons
         ]);
       enableDefaultPackages = false;
     };

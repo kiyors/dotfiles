@@ -17,6 +17,7 @@
     ./waybar.nix
     ./swaync.nix
     ./swayosd.nix
+    ./amane.nix
     ./aerospace.nix
     ./mpv.nix
     ./spicetify.nix

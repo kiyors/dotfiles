@@ -1,0 +1,11 @@
+# `amane compile` / `amane dev` write this next to src/ on *every* build
+# (cli/src/project.rs:34), so it is generated, never authored. It exists so
+# rust-analyzer can find amane, and it hardcodes absolute paths:
+#
+#     [[bin]]
+#     path = '/home/gaurav/dotfiles/config/amane/src/main.rs'
+#     amane = { path = '/home/gaurav/.cache/amane/library' }
+#
+# Both are machine-specific, and the file gets clobbered on the next build,
+# so committing it only produces permanent diff noise.
+Cargo.toml
