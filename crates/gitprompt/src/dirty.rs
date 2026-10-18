@@ -37,51 +37,135 @@ impl Dirty {
     }
 }
 
+/// How long `git status` may run before the prompt gives up on it.
+///
+/// A prompt runs after every command, so an unbounded child process is the one
+/// failure mode that makes the shell unusable rather than merely wrong. Real
+/// triggers: a hung `core.fsmonitor` hook, an NFS or SMB home directory, or a
+/// `git` wrapper script that blocks.
+///
+/// Exceeding this yields [`Dirty::Unknown`], which renders no `✘`. A prompt
+/// that is briefly wrong self-corrects on the next draw; a shell you cannot type
+/// into does not.
+const GIT_TIMEOUT: Duration = Duration::from_millis(500);
+
 /// Asks git whether anything differs from `HEAD`.
 ///
 /// Untracked files are counted, because the shell prompt this replaces treated
 /// them as dirty; dropping them would silently change the indicator's meaning.
+/// `git diff-index` would answer this without walking the working tree, but it
+/// ignores untracked files and would silently redefine the indicator.
 ///
 /// `GIT_OPTIONAL_LOCKS=0` keeps git from rewriting `.git/index` as a side
 /// effect of a read-only status check. It is an environment variable rather
 /// than a flag because `--no-optional-locks` is a `git` global option and is
 /// rejected by `git status` itself.
+///
+/// Bounded by [`GIT_TIMEOUT`]; see its docs for why.
 pub fn check(repo_root: &Path) -> Dirty {
-    let Ok(output) = Command::new("git")
+    check_with(repo_root, GIT_TIMEOUT, Path::new("git"))
+}
+
+/// [`check`], with the timeout and the `git` binary under the caller's control.
+///
+/// Split out so the timeout path can be tested against a stand-in binary
+/// without rewriting `PATH`. Mutating the environment is `unsafe` in recent
+/// Rust and this workspace sets `unsafe_code = "forbid"`, so injection is the
+/// only way to exercise a hang deterministically.
+fn check_with(repo_root: &Path, timeout: Duration, git_bin: &Path) -> Dirty {
+    let Ok(mut child) = Command::new(git_bin)
         .arg("status")
         .arg("--porcelain")
         .env("GIT_OPTIONAL_LOCKS", "0")
         .current_dir(repo_root)
-        .output()
+        // stdin must not be inherited: a git that decided to prompt would
+        // otherwise steal keystrokes from the user's prompt line.
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
     else {
+        return Dirty::Unknown;
+    };
+
+    // The child is waited on by a background thread while this one enforces the
+    // deadline. A `try_wait` poll loop cannot do this job: the child only
+    // reports a status once it *exits*, so a hung `git` would keep the loop
+    // spinning until the child finished on its own — which is precisely the
+    // hang the timeout exists to prevent.
+    //
+    // Only stdout is taken; the waiter keeps ownership of the `Child` so it can
+    // reap the process. Killing on timeout needs the pid, which is captured
+    // before the move.
+    let pid = child.id();
+    let mut stdout = child.stdout.take();
+
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let result = child.wait();
+        let _ = tx.send(result);
+    });
+
+    // Timed out, or the waiter panicked: kill the child so it does not outlive
+    // the prompt as an orphan. A failure to kill means it already exited, which
+    // is harmless.
+    let Ok(Ok(status)) = rx.recv_timeout(timeout) else {
+        kill_pid(pid);
         return Dirty::Unknown;
     };
 
     // `git status` exits 128 with empty stdout outside a repository, so the
     // exit status has to be checked before interpreting empty stdout as clean.
     // Reporting "clean" there would silently mask a real failure.
-    if !output.status.success() {
+    if !status.success() {
         return Dirty::Unknown;
     }
 
-    if output.stdout.is_empty() {
+    // With the child reaped, the pipes are closed and this read returns
+    // whatever git wrote without blocking.
+    let mut buffer = Vec::new();
+    if let Some(mut out) = stdout.take() {
+        use std::io::Read as _;
+        let _ = out.read_to_end(&mut buffer);
+    }
+
+    if buffer.is_empty() {
         Dirty::No
     } else {
         Dirty::Yes
     }
 }
 
-/// Short-lived memo for the dirty verdict.
+/// Sends `SIGKILL` to a pid already known to have exited or be hung.
 ///
-/// **This trades freshness for speed, deliberately.** An earlier design keyed
-/// the cache on the `.git/index` mtime, which is wrong: editing a tracked file
-/// does not rewrite the index, so the prompt would keep reporting "clean"
-/// indefinitely. A time bound has no such failure mode — the worst case is that
-/// a change made in the last few milliseconds is not yet reflected.
+/// `Child::kill` is not reachable here because the child has been moved into
+/// the waiter thread. `unsafe` is forbidden workspace-wide, so this shells out
+/// to `kill` rather than calling libc directly; the `kill` binary is present on
+/// every platform this runs on, and a failure only means the process is
+/// already gone.
+fn kill_pid(pid: u32) {
+    let _ = Command::new("kill")
+        .arg("-KILL")
+        .arg(pid.to_string())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status();
+}
+
+/// Repeated-lookup memo for the dirty verdict.
 ///
-/// The default TTL is short enough that the staleness is not perceptible
-/// between two commands, and long enough to absorb the burst of redraws zsh
-/// performs while a prompt is being drawn.
+/// **This exists for tests and for any future caller that polls within one
+/// process.** The shell does not: `$(gitprompt)` spawns a fresh process per
+/// prompt draw, so every run starts with an empty cache and the memo can never
+/// hit. An earlier version of this crate claimed the cache absorbed "a burst of
+/// redraws"; that was wrong, and the claim was removed rather than the code kept
+/// to justify it. The dirty check is simply called once, on startup, by
+/// [`check`]'s caller.
+///
+/// **Where it does trade freshness for speed, that is a real trade.** The worst
+/// case is a change made within the TTL not yet being reflected. It is not keyed
+/// on the `.git/index` mtime, because editing a tracked file does not rewrite the
+/// index and that would report "clean" indefinitely.
 #[derive(Debug)]
 pub struct Cached {
     inner: std::sync::Mutex<Option<(Instant, Dirty)>>,
@@ -115,10 +199,15 @@ impl Cached {
         }
 
         let dirty = check(repo_root);
+
+        // Stamped *after* the call. Stamping before would store an entry that is
+        // already expired whenever git takes longer than the TTL — which is
+        // exactly the large-repository case a cache would exist to help.
         *self
             .inner
             .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some((now, dirty));
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some((Instant::now(), dirty));
+
         dirty
     }
 }
@@ -241,6 +330,60 @@ mod tests {
         assert_eq!(cache.get(&repo), Dirty::No);
 
         let _ = std::fs::remove_dir_all(&repo);
+    }
+
+    #[test]
+    fn a_hanging_git_is_abandoned_rather_than_blocking_the_prompt() {
+        // Regression guard for the worst failure mode this binary has: it runs
+        // on every prompt, so an unbounded `git status` — a hung fsmonitor hook,
+        // an NFS home directory — wedges the shell until the user notices.
+        //
+        // A stand-in binary that sleeps plays the hung child, so the test does
+        // not need to touch PATH (which would require `unsafe`).
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt as _;
+
+            let bin = std::env::temp_dir().join(format!("gitprompt-hang-{}", std::process::id()));
+            std::fs::create_dir_all(&bin).unwrap();
+            let fake = bin.join("git");
+            std::fs::write(&fake, "#!/bin/sh\nsleep 30\n").unwrap();
+            std::fs::set_permissions(&fake, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+            let started = Instant::now();
+            let state = check_with(std::path::Path::new("."), Duration::from_millis(300), &fake);
+            let elapsed = started.elapsed();
+
+            let _ = std::fs::remove_dir_all(&bin);
+
+            assert_eq!(state, Dirty::Unknown);
+            assert!(
+                elapsed < Duration::from_secs(5),
+                "check took {elapsed:?}; the timeout is not being enforced"
+            );
+        }
+    }
+
+    #[test]
+    fn a_stand_in_binary_that_succeeds_is_consulted() {
+        // Guards the injection path itself: if `check_with` ignored its `git_bin`
+        // argument the timeout test above would pass for the wrong reason.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt as _;
+
+            let bin = std::env::temp_dir().join(format!("gitprompt-fake-{}", std::process::id()));
+            std::fs::create_dir_all(&bin).unwrap();
+            let fake = bin.join("git");
+            // `git status --porcelain` prints one entry for an untracked file.
+            std::fs::write(&fake, "#!/bin/sh\necho '?? newfile'\n").unwrap();
+            std::fs::set_permissions(&fake, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+            let state = check_with(std::path::Path::new("."), GIT_TIMEOUT, &fake);
+
+            let _ = std::fs::remove_dir_all(&bin);
+            assert_eq!(state, Dirty::Yes);
+        }
     }
 
     #[test]

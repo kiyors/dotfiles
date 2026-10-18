@@ -70,17 +70,41 @@ pub fn segment(branch: &str, dirty: bool) -> String {
     out
 }
 
-/// Escapes a branch name for safe inclusion in a prompt.
+/// Makes a branch name safe to splice into `PROMPT`.
 ///
-/// Branch names cannot contain control characters, but `HEAD` is a file on
-/// disk and a corrupt or hostile repository should not be able to inject escape
-/// sequences into the user's terminal.
+/// The dangerous character here is `%`, not ESC. This output is not printed to
+/// a terminal — it is expanded by zsh as part of the prompt, where `%` opens a
+/// prompt escape. `git check-ref-format` accepts `%` in ref names, and a cloned
+/// repository adopts the remote's branch names, so a hostile remote named its
+/// default branch `hotfix%<` would otherwise break the prompt on first
+/// checkout.
+///
+/// Consequences of not escaping, all reproduced against real zsh:
+///
+/// - `%<` starts a left-truncation construct that swallows the rest of the
+///   prompt: no closing paren, no reset, no `%#` indicator.
+/// - `%d` and `%m` expand to the working directory and hostname.
+/// - `%}` closes a `%{` zero-width marker early, corrupting width accounting.
+///
+/// `%%` is zsh's literal `%`, so doubling is the correct escape. ESC and other
+/// control characters are dropped outright rather than escaped, since there is
+/// no legitimate reason for them in a ref name.
+///
+/// Width is deliberately *not* adjusted for multi-cell characters (CJK, emoji).
+/// zsh's `%1{...%}` marker handles a known literal like the dirty glyph; a
+/// computed width for arbitrary branch text would need terminal metrics this
+/// process cannot query, and guessing wrong is worse than leaving it to zsh.
 #[must_use]
 pub fn sanitize(branch: &str) -> String {
-    branch
-        .chars()
-        .filter(|c| !c.is_control() && *c != '\u{1b}')
-        .collect()
+    let mut out = String::with_capacity(branch.len());
+    for c in branch.chars() {
+        if c == '%' {
+            out.push_str("%%");
+        } else if !c.is_control() {
+            out.push(c);
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -167,5 +191,76 @@ mod tests {
             "only the four styling escapes should remain"
         );
         assert!(rendered.contains("main"));
+    }
+
+    // --- `%` escaping -------------------------------------------------------
+    //
+    // `git check-ref-format` accepts `%` in ref names, and a clone adopts the
+    // remote's branch names, so these are reachable without anyone typing them.
+
+    #[test]
+    fn percent_in_a_branch_name_is_doubled() {
+        // `%%` is zsh's literal percent.
+        assert_eq!(sanitize("pct50%"), "pct50%%");
+        assert_eq!(sanitize("a%b"), "a%%b");
+    }
+
+    /// Strips this crate's own prompt tokens, leaving only the branch text.
+    ///
+    /// The `%%` sequences are the escaped form and are removed outright. What
+    /// survives is any `%` the branch contributed unescaped — which is exactly
+    /// what an active prompt escape would look like.
+    fn branch_text_only(rendered: &str) -> String {
+        rendered
+            .replace("%1{", "")
+            .replace("%%", "")
+            .replace("%{", "")
+            .replace("%}", "")
+    }
+
+    #[test]
+    fn a_percent_truncation_construct_cannot_escape_the_segment() {
+        // `%<` opens a left-truncation that runs to the end of the prompt. Left
+        // unescaped it ate the closing paren, the reset, and everything after.
+        let rendered = segment(&sanitize("hotfix%<"), false);
+
+        assert!(
+            !branch_text_only(&rendered).contains('%'),
+            "unescaped percent survived into {rendered:?}"
+        );
+        assert!(rendered.contains("hotfix%%<"));
+    }
+
+    #[test]
+    fn information_leaking_prompts_are_neutralised() {
+        // `%d` -> cwd, `%m`/`%n` -> hostname/username. All become literals.
+        for hostile in ["fix%d", "fix%m", "fix%n", "fix%<", "fix%(", "fix%s"] {
+            let rendered = segment(&sanitize(hostile), false);
+            assert!(
+                !branch_text_only(&rendered).contains('%'),
+                "{hostile} left an active prompt escape: {rendered:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_percent_brace_cannot_close_the_zero_width_marker_early() {
+        // `%}` would end a `%{` early and corrupt zsh's width accounting. Both
+        // metacharacters must be doubled: `%` so it is literal, and the brace
+        // that follows is then just ordinary text.
+        let sanitized = sanitize("a%}b%{c");
+        assert_eq!(sanitized, "a%%}b%%{c");
+
+        let rendered = segment(&sanitized, false);
+        // The branch text contributes no bare `%`, only the escaped `%%` form.
+        assert!(!branch_text_only(&rendered).contains('%'));
+        assert!(rendered.contains("a%%}b%%{c"));
+    }
+
+    #[test]
+    fn ordinary_branch_names_are_untouched_by_escaping() {
+        for name in ["main", "feature/login", "v1.2.3", "release-2024"] {
+            assert_eq!(sanitize(name), name, "{name} should pass through unchanged");
+        }
     }
 }
