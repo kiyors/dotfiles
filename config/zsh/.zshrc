@@ -113,10 +113,10 @@ autoload -U colors && colors
 PROMPT="%(?:%{$fg_bold[green]%}%1{➜%}:%{$fg_bold[red]%}%1{➜%} ) %{$fg[cyan]%}%c%{$reset_color%}"
 PROMPT+=' $(git_prompt_info)'
 
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}git:(%{$fg[red]%}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}) %{$fg[yellow]%}%1{✘%}"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
+# The four ZSH_THEME_GIT_PROMPT_* variables that used to live here are gone:
+# `gitprompt` emits the colour codes itself, byte-for-byte what they expanded
+# to. They are documented in crates/gitprompt/src/render.rs, where the exact
+# escape sequences are pinned by tests.
 
 # Shell integrations (sheldon already sourced from cache above — do not re-source)
 _cached_eval fzf fzf --zsh

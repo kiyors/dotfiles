@@ -3,6 +3,12 @@
 session_name="$1"
 session_path=$(tmux display-message -t "$session_name" -p "#{session_path}")
 
+# Locate sesh.toml relative to this script rather than assuming the repo lives
+# at ~/dotfiles. SCRIPT_DIR survives being symlinked into ~/.config/tmux, which
+# is how the Nix layer installs this file.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SESH_CONFIG="$SCRIPT_DIR/../sesh/sesh.toml"
+
 # Calculate desired name
 desired_name=""
 if [[ "$session_path" == "$HOME/workspace" ]]; then
@@ -25,7 +31,7 @@ desired_name=${desired_name//./_}
 desired_name=${desired_name//:/_}
 
 # Check if the session is explicitly named in sesh.toml
-if grep -qE "^name[[:space:]]*=[[:space:]]*[\"']${session_name}[\"']" "$HOME/dotfiles/config/sesh/sesh.toml" 2>/dev/null; then
+if [[ -f "$SESH_CONFIG" ]] && grep -qE "^name[[:space:]]*=[[:space:]]*[\"']${session_name}[\"']" "$SESH_CONFIG" 2>/dev/null; then
   exit 0
 fi
 
