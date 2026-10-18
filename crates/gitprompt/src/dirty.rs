@@ -94,14 +94,28 @@ fn check_with(repo_root: &Path, timeout: Duration, git_bin: &Path) -> Dirty {
     // spinning until the child finished on its own — which is precisely the
     // hang the timeout exists to prevent.
     //
-    // Only stdout is taken; the waiter keeps ownership of the `Child` so it can
-    // reap the process. Killing on timeout needs the pid, which is captured
-    // before the move.
-    let pid = child.id();
-    let mut stdout = child.stdout.take();
+    // Both stdout and stderr are taken *before* the move. `Child::wait` drops
+    // the pipe handles, so a thread that called it and won the race could close
+    // stdout underneath the reader and make a repo with real changes report
+    // clean. That race is rare enough to pass locally and fail in CI; keeping
+    // ownership of the pipes here removes the ordering dependency entirely.
+    let stdout = child.stdout.take();
 
+    let reader = std::thread::spawn(move || {
+        use std::io::Read as _;
+
+        let mut buffer: Vec<u8> = Vec::new();
+        if let Some(mut out) = stdout {
+            // Bounded so a pathological `git` cannot grow this without limit;
+            // the verdict only needs to know whether any output arrived.
+            let _ = out.by_ref().take(64 * 1024).read_to_end(&mut buffer);
+        }
+        buffer
+    });
+
+    let pid = child.id();
     let (tx, rx) = std::sync::mpsc::channel();
-    std::thread::spawn(move || {
+    let waiter = std::thread::spawn(move || {
         let result = child.wait();
         let _ = tx.send(result);
     });
@@ -109,8 +123,14 @@ fn check_with(repo_root: &Path, timeout: Duration, git_bin: &Path) -> Dirty {
     // Timed out, or the waiter panicked: kill the child so it does not outlive
     // the prompt as an orphan. A failure to kill means it already exited, which
     // is harmless.
+    //
+    // The reader is deliberately *not* joined here. It is blocked in `read` on
+    // a pipe the hung child still holds open, and joining it would reinstate
+    // exactly the hang this timeout exists to prevent. Killing the child closes
+    // the pipe and the thread then finishes on its own.
     let Ok(Ok(status)) = rx.recv_timeout(timeout) else {
         kill_pid(pid);
+        drop(waiter);
         return Dirty::Unknown;
     };
 
@@ -118,16 +138,14 @@ fn check_with(repo_root: &Path, timeout: Duration, git_bin: &Path) -> Dirty {
     // exit status has to be checked before interpreting empty stdout as clean.
     // Reporting "clean" there would silently mask a real failure.
     if !status.success() {
+        drop(waiter);
+        drop(reader);
         return Dirty::Unknown;
     }
 
-    // With the child reaped, the pipes are closed and this read returns
-    // whatever git wrote without blocking.
-    let mut buffer = Vec::new();
-    if let Some(mut out) = stdout.take() {
-        use std::io::Read as _;
-        let _ = out.read_to_end(&mut buffer);
-    }
+    // The child has exited, so the pipe is closed and this join returns at once.
+    let buffer = reader.join().unwrap_or_default();
+    let _ = waiter.join();
 
     if buffer.is_empty() {
         Dirty::No
