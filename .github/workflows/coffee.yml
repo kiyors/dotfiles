@@ -1,0 +1,53 @@
+name: coffee
+
+on:
+  push:
+    paths:
+      - "crates/coffee/**"
+      - "modules/darwin/zombie-reaper.nix"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/coffee.yml"
+  pull_request:
+    paths:
+      - "crates/coffee/**"
+      - "modules/darwin/zombie-reaper.nix"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/coffee.yml"
+
+# `crates/coffee` is a member of a virtual workspace whose root manifest is two
+# levels up, so every cargo command runs from the member directory.
+defaults:
+  run:
+    working-directory: crates/coffee
+
+jobs:
+  check:
+    # macOS, because the tests exercise real process tables, real volumes and
+    # real launchd output. A Linux runner would silently skip most of that.
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # The Nix build runs `cargo test` via `doCheck`, but nothing runs fmt or
+      # clippy anywhere. These two are what stops a warning reaching main.
+      - name: Format
+        run: cargo fmt --all --check
+
+      # `--workspace` because this is a member of a virtual workspace, and the
+      # lint set lives in the root manifest rather than the member's.
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      # `background_policy_matches_the_launchd_agent` reads
+      # modules/darwin/zombie-reaper.nix via CARGO_MANIFEST_DIR. The checkout
+      # provides that file here, but the Nix build sandbox does not — which is
+      # why this module is in the path filter above.
+      - name: Test
+        run: cargo test --workspace

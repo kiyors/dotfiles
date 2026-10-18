@@ -98,6 +98,20 @@ pub struct Candidate {
     pub exe: String,
 }
 
+/// The full command line of a process, joined with spaces.
+///
+/// `sysinfo` returns argv as a slice, and every caller in this module wanted
+/// the same single string to substring-match against. Doing the join in one
+/// place also keeps the lossy conversion applied once.
+pub fn command_line(process: &sysinfo::Process) -> String {
+    process
+        .cmd()
+        .iter()
+        .map(|part| part.to_string_lossy())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 /// Case-insensitive substring match against any of `targets`.
 ///
 /// Blank targets are ignored so that `--target ""` can never match everything.
@@ -185,7 +199,7 @@ pub fn find_candidates(system: &System, args: &ReapArgs) -> Vec<Candidate> {
             }
 
             // 5. Only processes adopted by launchd.
-            if !process.parent().is_some_and(|parent| parent.as_u32() == 1) {
+            if process.parent().is_none_or(|parent| parent.as_u32() != 1) {
                 return None;
             }
 
@@ -196,18 +210,21 @@ pub fn find_candidates(system: &System, args: &ReapArgs) -> Vec<Candidate> {
             // `min_cpu` and `min_memory` are alternatives: a process must trip
             // at least one of them, so a 4 GB leaked renderer is still caught
             // even while idle, and a busy compile is caught at low memory.
-            let cpu_hot = cpu_usage >= args.min_cpu;
-            let memory_hungry = memory >= args.min_memory;
-            if !(age >= args.min_age && (cpu_hot || memory_hungry)) {
+            //
+            // A threshold of 0 means "this check is disabled", not "everything
+            // passes it": comparing against an unset threshold would be
+            // vacuously true (`x >= 0`), which would silently make the *other*
+            // threshold irrelevant. With `--min-memory 0` — the default — that
+            // turned `--min-cpu` into a no-op and reduced the policy to
+            // "orphan + target match", killing idle long-lived dev servers.
+            let cpu_hot = args.min_cpu > 0.0 && cpu_usage >= args.min_cpu;
+            let memory_hungry = args.min_memory > 0 && memory >= args.min_memory;
+            // Reject unless every layer of the policy agrees.
+            if age < args.min_age || !(cpu_hot || memory_hungry) {
                 return None;
             }
 
-            let command = process
-                .cmd()
-                .iter()
-                .map(|part| part.to_string_lossy())
-                .collect::<Vec<_>>()
-                .join(" ");
+            let command = command_line(process);
 
             if !command_matches(&command, &args.targets) {
                 return None;
@@ -247,15 +264,10 @@ pub fn find_candidates(system: &System, args: &ReapArgs) -> Vec<Candidate> {
 /// walks the whole process table.
 pub fn any_process_matches(system: &System, fragment: &str) -> bool {
     let targets = [fragment.to_string()];
-    system.processes().values().any(|process| {
-        let command = process
-            .cmd()
-            .iter()
-            .map(|part| part.to_string_lossy())
-            .collect::<Vec<_>>()
-            .join(" ");
-        command_matches(&command, &targets)
-    })
+    system
+        .processes()
+        .values()
+        .any(|process| command_matches(&command_line(process), &targets))
 }
 
 impl Candidate {
@@ -275,7 +287,11 @@ impl Candidate {
 }
 
 /// Render the candidates as a table, newest metrics first.
-fn candidate_table(candidates: &[Candidate]) {
+fn candidate_table(candidates: &[Candidate], out: &ui::Printer) {
+    if out.is_quiet() {
+        return;
+    }
+
     let rows: Vec<Vec<String>> = candidates
         .iter()
         .map(|candidate| {
@@ -308,44 +324,38 @@ fn candidate_table(candidates: &[Candidate]) {
 ///
 /// Returns whether every signal was delivered successfully.
 pub fn run(args: &ReapArgs) -> bool {
+    let out = ui::Printer::quiet(args.quiet);
+
     if let Err(error) = args.validate() {
-        ui::fatal(error);
+        out.fatal(error);
         return false;
     }
 
-    if !args.quiet {
-        ui::heading("🧟 Scanning for stale orphaned processes...");
-    }
+    out.heading("🧟 Scanning for stale orphaned processes...");
 
     let mut system = sample_processes();
     let candidates = find_candidates(&system, args);
 
     if candidates.is_empty() {
-        if !args.quiet {
-            println!(
-                "{} No candidates found (age ≥ {}s, CPU ≥ {:.1}%, memory ≥ {}, targets: {:?})",
-                "💤".blue(),
-                args.min_age,
-                args.min_cpu,
-                ui::human_bytes(args.min_memory),
-                args.targets
-            );
-        }
+        out.line(format!(
+            "{} No candidates found (age ≥ {}s, CPU ≥ {:.1}%, memory ≥ {}, targets: {:?})",
+            "💤".blue(),
+            args.min_age,
+            args.min_cpu,
+            ui::human_bytes(args.min_memory),
+            args.targets
+        ));
         return true;
     }
 
-    if !args.quiet {
-        println!("{}", "⚠️  Found orphaned processes:".yellow());
-        candidate_table(&candidates);
-        for candidate in &candidates {
-            println!("   {}", candidate.command.bright_black());
-        }
+    out.line(format!("{}", "⚠️  Found orphaned processes:".yellow()));
+    candidate_table(&candidates, &out);
+    for candidate in &candidates {
+        out.line(format!("   {}", candidate.command.bright_black()));
     }
 
     if args.dry_run {
-        if !args.quiet {
-            ui::dry_run(format!("Would reap {} process(es).", candidates.len()));
-        }
+        out.dry_run(format!("Would reap {} process(es).", candidates.len()));
         return true;
     }
 
@@ -368,7 +378,7 @@ pub fn run(args: &ReapArgs) -> bool {
             pending.push(candidate);
         } else {
             failed += 1;
-            ui::failure(format!("Failed to send SIGTERM to PID {}", candidate.pid));
+            out.failure(format!("Failed to send SIGTERM to PID {}", candidate.pid));
         }
     }
 
@@ -394,23 +404,21 @@ pub fn run(args: &ReapArgs) -> bool {
             }
             Some(_) => {
                 failed += 1;
-                ui::failure(format!("Failed to send SIGKILL to PID {}", candidate.pid));
+                out.failure(format!("Failed to send SIGKILL to PID {}", candidate.pid));
             }
         }
     }
 
-    if !args.quiet {
-        ui::rule();
-        println!(
-            "{} Reaped {} orphaned process(es) ({} required SIGKILL).",
-            "✨".green(),
-            reaped.to_string().bold(),
-            forced
-        );
-    }
+    out.rule();
+    out.line(format!(
+        "{} Reaped {} orphaned process(es) ({} required SIGKILL).",
+        "✨".green(),
+        reaped.to_string().bold(),
+        forced
+    ));
 
-    if forced > 0 && !args.quiet {
-        ui::warn(format!(
+    if forced > 0 {
+        out.warn(format!(
             "{forced} process(es) ignored SIGTERM and were force-killed"
         ));
     }

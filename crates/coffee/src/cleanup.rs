@@ -5,11 +5,14 @@
 //! produce a live destructive command, and that is asserted directly.
 
 use crate::cli::CleanupArgs;
+use crate::cmd::Launch;
 use crate::deep;
+use crate::log::Mode as Launcher;
 use crate::notify;
 use crate::reap;
+use crate::space;
 use crate::tmp;
-use crate::ui;
+use crate::ui::{self, Printer};
 use colored::Colorize;
 
 /// A child process that cleanup intends to run.
@@ -53,19 +56,26 @@ pub fn plan(args: &CleanupArgs) -> Vec<PlannedCommand> {
     if args.dry_run {
         nh_args.push("--dry".into());
     }
-    if args.quiet {
-        nh_args.push("--quiet".into());
-    }
+
+    // `--quiet` is deliberately NOT forwarded to `nh`. Its flag does not
+    // suppress the profile and GC output that dominated a "quiet" run; the
+    // quiet policy is enforced instead by discarding the child's output at the
+    // `log::Mode` layer, which is both effective and tool-independent.
+    //
+    // It is still forwarded to `mo`, which honours it properly.
 
     let mut commands = vec![PlannedCommand::new("nh", &nh_args)];
 
     if args.deep() {
-        let mo_args: &[&str] = if args.dry_run {
-            &["clean", "--dry-run"]
+        let mut mo_args: Vec<&str> = if args.dry_run {
+            vec!["clean", "--dry-run"]
         } else {
-            &["clean"]
+            vec!["clean"]
         };
-        commands.push(PlannedCommand::new("mo", mo_args));
+        if args.quiet {
+            mo_args.push("--quiet");
+        }
+        commands.push(PlannedCommand::new("mo", &mo_args));
     }
 
     if args.purge() {
@@ -119,13 +129,13 @@ impl CleanupStats {
 ///
 /// A real before/after free-space reading is used so the number accounts for
 /// `nh`, `mo` and `brew` as well, which this tool does not delete itself.
-fn print_stats(args: &CleanupArgs, stats: &CleanupStats) {
-    if args.quiet || args.no_stats {
+fn print_stats(args: &CleanupArgs, stats: &CleanupStats, out: &Printer) {
+    if out.is_quiet() || args.no_stats {
         return;
     }
 
-    ui::rule();
-    ui::heading(if args.dry_run {
+    out.rule();
+    out.heading(if args.dry_run {
         "📊 What a real run would free"
     } else {
         "📊 What was freed"
@@ -166,55 +176,49 @@ fn print_stats(args: &CleanupArgs, stats: &CleanupStats) {
     );
 
     if args.dry_run {
-        println!("{}", "  Preview only — nothing was deleted.".magenta());
+        out.line("  Preview only — nothing was deleted.".magenta());
     } else if stats.freed() > 0 {
-        ui::success(format!(
+        out.success(format!(
             "✨ Reclaimed {} of disk space",
             ui::human_bytes(stats.freed())
         ));
     } else {
-        println!(
-            "{}",
-            "  No measurable change (already clean, or another process reclaimed it).".dimmed()
-        );
+        out.note("  No measurable change (already clean, or another process reclaimed it).");
     }
 
     if !args.dry_run {
-        println!(
-            "{}",
-            "  Run `coffee space` to see what is still using space.".dimmed()
-        );
+        out.note("  Run `coffee space` to see what is still using space.");
     }
 }
-///
+
 /// Returns false if validation fails or any child command fails, so launchd
 /// logs expose partial failures.
 pub fn run(args: &CleanupArgs) -> bool {
+    let out = Printer::quiet(args.quiet);
+
     if let Err(error) = args.validate() {
-        ui::fatal(error);
+        out.fatal(error);
         return false;
     }
 
-    if !args.quiet {
-        ui::heading(if args.dry_run {
-            "🧹 Previewing system cleanup..."
-        } else {
-            "🧹 Running system cleanup..."
-        });
-        ui::rule();
-    }
+    out.heading(if args.dry_run {
+        "🧹 Previewing system cleanup..."
+    } else {
+        "🧹 Running system cleanup..."
+    });
+    out.rule();
 
     // Say what is about to become unrecoverable *before* prompting for sudo,
     // not after the fact.
     if (args.deep || args.purge_projects) && !args.dry_run {
-        ui::warn(
+        out.warn(
             "`mo purge --yes` runs unattended, which skips the interactive review \
              that normally protects artifacts used in the last 7 days; preview with \
              `co clean --deep --dry-run`",
         );
     }
     if args.gc() && !args.dry_run {
-        ui::warn(
+        out.warn(
             "`nix-collect-garbage -d` deletes every old Nix generation system-wide; \
              rolling back to a previous system or profile will no longer be possible",
         );
@@ -226,38 +230,22 @@ pub fn run(args: &CleanupArgs) -> bool {
     // Captured before anything runs, so the closing summary measures the whole
     // run rather than only what this tool deleted by hand.
     let mut stats = CleanupStats {
-        free_before: crate::space::total_free(),
+        free_before: space::total_free(),
         ..Default::default()
     };
 
-    for command in &commands {
-        if !args.quiet {
-            ui::step(&command.program, &command.args);
-        }
+    // Under `--quiet` the children's own output is discarded, so `nh`'s profile
+    // and GC dumps no longer appear in a "quiet" run.
+    let mode = Launcher::from_quiet(args.quiet);
 
-        match std::process::Command::new(&command.program)
-            .args(&command.args)
-            .status()
-        {
-            Ok(status) if status.success() => {
-                if !args.quiet {
-                    ui::ok(format!(
-                        "Successfully executed {} {:?}",
-                        command.program, command.args
-                    ));
-                }
-            }
-            Ok(status) => {
-                succeeded = false;
-                eprintln!(
-                    "  {} Command {} {:?} exited with status: {}",
-                    "❌".red(),
-                    command.program.bold(),
-                    command.args,
-                    status.to_string().red()
-                );
-            }
-            Err(error) => {
+    for command in &commands {
+        out.step(&command.program, &command.args);
+
+        match mode.run(&command.program, &command.args) {
+            // Report the real reason the tool could not start. "not found",
+            // "permission denied" and a corrupt shebang need different fixes, so
+            // guessing one of them here would send the reader to the wrong place.
+            Launch::Failed(error) => {
                 succeeded = false;
                 eprintln!(
                     "  {} Failed to execute {} {:?}: {}",
@@ -267,30 +255,42 @@ pub fn run(args: &CleanupArgs) -> bool {
                     error.to_string().red()
                 );
             }
+            Launch::Ran(status) if status.success() => out.ok(format!(
+                "Successfully executed {} {:?}",
+                command.program, command.args
+            )),
+            Launch::Ran(status) => {
+                succeeded = false;
+                eprintln!(
+                    "  {} Command {} {:?} exited with status: {}",
+                    "❌".red(),
+                    command.program.bold(),
+                    command.args,
+                    status.to_string().red()
+                );
+            }
         }
     }
 
     // Call out anything a dry run deliberately withheld.
-    if args.optimise() && args.dry_run && !args.quiet {
-        ui::step("sudo", &["nix-store".into(), "--optimise".into()]);
-        ui::dry_run("Would execute sudo nix-store --optimise");
+    if args.optimise() && args.dry_run {
+        out.step("sudo", &["nix-store".into(), "--optimise".into()]);
+        out.dry_run("Would execute sudo nix-store --optimise");
     }
 
     if args.deep() && succeeded {
-        if !args.quiet {
-            ui::rule();
-            ui::heading(if args.dry_run {
-                "🧹 Previewing deep developer caches cleanup..."
-            } else {
-                "🧹 Cleaning deep developer caches..."
-            });
-            // `mo clean` empties the Trash unless it is whitelisted, which is
-            // the one irreversible thing in this phase.
-            ui::warn(
-                "`mo clean` also empties the Trash unless it is protected — \
-                 add it via `mo clean --whitelist`",
-            );
-        }
+        out.rule();
+        out.heading(if args.dry_run {
+            "🧹 Previewing deep developer caches cleanup..."
+        } else {
+            "🧹 Cleaning deep developer caches..."
+        });
+        // `mo clean` empties the Trash unless it is whitelisted, which is
+        // the one irreversible thing in this phase.
+        out.warn(
+            "`mo clean` also empties the Trash unless it is protected — \
+             add it via `mo clean --whitelist`",
+        );
 
         // One process snapshot for the whole phase. Sampling per cache would
         // walk the entire process table once per cache, and this is the slowest
@@ -302,49 +302,46 @@ pub fn run(args: &CleanupArgs) -> bool {
     }
 
     if (args.deep() || args.clean_tmp()) && succeeded {
-        if !args.quiet {
-            ui::rule();
-            ui::heading(if args.dry_run {
-                "🧹 Previewing /tmp cleanup..."
-            } else {
-                "🧹 Cleaning /tmp junk..."
-            });
-        }
+        out.rule();
+        out.heading(if args.dry_run {
+            "🧹 Previewing /tmp cleanup..."
+        } else {
+            "🧹 Cleaning /tmp junk..."
+        });
 
         let tmp_stats = tmp::clean(args.dry_run, args.quiet, args.tmp_min_age);
-        stats.tmp_items = tmp_stats.removed + tmp_stats.skipped;
+        stats.tmp_items = tmp_stats.accounted();
         stats.direct_bytes += tmp_stats.bytes;
     }
 
-    if args.all && !args.quiet {
-        ui::warn(
-            "`--all` removed every Nix generation and every project build \
+    if args.all {
+        out.warn(
+            "`--all` removed every old Nix generation (only the current \
+             generation of each profile survives) and every project build \
              artifact. There is no undo beyond what `co space` can re-scan.",
         );
     }
 
-    stats.free_after = crate::space::total_free();
+    stats.free_after = space::total_free();
 
-    if !args.quiet {
-        ui::rule();
-    }
+    out.rule();
 
-    if succeeded && !args.quiet {
-        ui::success(if args.dry_run {
+    if succeeded {
+        out.success(if args.dry_run {
             "✨ System cleanup preview complete."
         } else {
             "✨ System cleanup complete."
         });
-    } else if !succeeded {
-        eprintln!("{}", "System cleanup completed with errors.".red().bold());
+    } else {
+        out.failure("System cleanup completed with errors.");
     }
 
-    print_stats(args, &stats);
+    print_stats(args, &stats, &out);
 
     if succeeded && !args.dry_run && !args.no_notify {
         notify::send(
             "System Maintainer",
-            if args.deep {
+            if args.deep() {
                 "Deep system cleanup complete 🧹"
             } else {
                 "System cleanup complete 🧹"
@@ -400,10 +397,18 @@ mod tests {
     }
 
     #[test]
-    fn quiet_is_forwarded_to_nh() {
+    fn quiet_is_forwarded_to_mo_but_not_to_nh() {
+        // `mo` honours `--quiet`; `nh` has no equivalent, and passing one there
+        // would still leave `nh`'s own profile and GC output in the log. So the
+        // quiet policy belongs to `coffee` (via `Printer`), and `nh` is left
+        // without a flag it cannot honour.
         let mut a = args();
         a.quiet = true;
-        assert!(plan(&a)[0].args.contains(&"--quiet".to_string()));
+        a.deep = true;
+
+        let commands = plan(&a);
+        assert!(!commands[0].args.contains(&"--quiet".to_string()));
+        assert!(commands[1].args.contains(&"--quiet".to_string()));
     }
 
     #[test]
@@ -594,5 +599,25 @@ mod tests {
         assert!(empty_since.validate().is_err());
 
         assert!(args().validate().is_ok());
+    }
+
+    #[test]
+    fn all_keeps_the_current_generation() {
+        // `--keep 0` tells nh to delete the very generation each profile
+        // symlink points at: root's `default` profile (which holds the Nix
+        // binaries) and the running system generation both disappear, and the
+        // follow-up `sudo nix-collect-garbage` can no longer even start.
+        // `--all` must drop the old generations, never the current one.
+        let mut a = args();
+        a.all = true;
+
+        let commands = plan(&a);
+        let kept = commands[0]
+            .args
+            .windows(2)
+            .find(|w| w[0] == "--keep")
+            .map(|w| w[1].clone())
+            .expect("--keep present in the nh plan");
+        assert_eq!(kept, "1", "unexpected plan: {commands:?}");
     }
 }

@@ -11,12 +11,17 @@
 //! - [`doctor`]  — read-only health report
 //! - [`notify`]  — macOS notifications
 //! - [`tool`]    — locating external tools
+//! - [`cmd`]     — spawning external child processes
+//! - [`log`]     — whether a child may write to the terminal
+//! - [`space`]   — disk size accounting (volumes, directory sizes)
 //! - [`ui`]      — shared terminal formatting
 
 mod cleanup;
 mod cli;
+mod cmd;
 mod deep;
 mod doctor;
+mod log;
 mod notify;
 mod reap;
 mod space;

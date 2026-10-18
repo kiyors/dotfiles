@@ -2,55 +2,128 @@
 //!
 //! Centralising the emoji and colour vocabulary keeps every subcommand looking
 //! the same and gives the test suite one place to format sizes.
+//!
+//! Two entry points cover every output line a subcommand needs: [`Printer`],
+//! which is quiet-aware, and [`table`] for bordered columns.
 
 use colored::Colorize;
 use std::fmt::Display;
 
 const RULE_WIDTH: usize = 50;
 
-/// A cyan, bold section heading.
-pub fn heading(text: impl Display) {
-    println!("{}", text.to_string().cyan().bold());
+/// Quiet-aware output.
+///
+/// Every subcommand used to wrap each progress line in `if !quiet { ... }`,
+/// which meant the flag had to be threaded into every helper signature and
+/// every call site repeated the same guard. Folding it into a value makes the
+/// guard part of the helper: the call sites become straight-line code and the
+/// "should this print?" decision lives in exactly one place.
+///
+/// Failures are deliberately exempt. `--quiet` means "suppress *routine*
+/// progress output", and a failed step is not routine — a silent error in a
+/// launchd log is worse than a noisy one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Printer {
+    quiet: bool,
 }
 
-/// A horizontal separator.
-pub fn rule() {
-    println!("{}", "─".repeat(RULE_WIDTH).bright_black());
-}
+#[allow(clippy::unused_self)] // the quiet flag is the receiver's only state
+impl Printer {
+    /// A printer that emits routine output when `quiet` is false.
+    pub fn quiet(quiet: bool) -> Self {
+        Self { quiet }
+    }
 
-/// Announce a child process that is about to run.
-pub fn step(program: impl Display, args: &[String]) {
-    println!("{} {} {:?}", "▶".blue(), program.to_string().bold(), args);
-}
+    /// Whether routine output is being suppressed.
+    pub fn is_quiet(self) -> bool {
+        self.quiet
+    }
 
-/// A successful child process or completed action.
-pub fn ok(text: impl Display) {
-    println!("  {} {}", "✅".green(), text);
-}
+    /// A cyan, bold section heading.
+    pub fn heading(&self, text: impl Display) {
+        if self.quiet {
+            return;
+        }
+        println!("{}", text.to_string().cyan().bold());
+    }
 
-/// Something unexpected that did not stop the run.
-pub fn warn(text: impl Display) {
-    println!("  {} {}", "⚠️".yellow(), text);
-}
+    /// A horizontal separator.
+    pub fn rule(&self) {
+        if self.quiet {
+            return;
+        }
+        println!("{}", "─".repeat(RULE_WIDTH).bright_black());
+    }
 
-/// A failed child process or action, indented under its parent step.
-pub fn failure(text: impl Display) {
-    eprintln!("  {} {}", "❌".red(), text);
-}
+    /// Announce a child process that is about to run.
+    pub fn step(&self, program: impl Display, args: &[String]) {
+        if self.quiet {
+            return;
+        }
+        println!("{} {} {:?}", "▶".blue(), program.to_string().bold(), args);
+    }
 
-/// A fatal problem that aborts the whole command.
-pub fn fatal(text: impl Display) {
-    eprintln!("{} {}", "❌".red(), text);
-}
+    /// A successful child process or completed action.
+    pub fn ok(&self, text: impl Display) {
+        if self.quiet {
+            return;
+        }
+        println!("  {} {}", "✅".green(), text);
+    }
 
-/// An action that was skipped because `--dry-run` was given.
-pub fn dry_run(text: impl Display) {
-    println!("  {} {}", "[DRY RUN]".magenta(), text);
-}
+    /// Something unexpected that did not stop the run.
+    pub fn warn(&self, text: impl Display) {
+        if self.quiet {
+            return;
+        }
+        println!("  {} {}", "⚠️".yellow(), text);
+    }
 
-/// A final green, bold result line.
-pub fn success(text: impl Display) {
-    println!("{}", text.to_string().green().bold());
+    /// A failed child process or action, indented under its parent step.
+    ///
+    /// Printed even when quiet, and always to stderr.
+    pub fn failure(&self, text: impl Display) {
+        eprintln!("  {} {}", "❌".red(), text);
+    }
+
+    /// A fatal problem that aborts the whole command.
+    ///
+    /// Printed even when quiet, and always to stderr.
+    pub fn fatal(&self, text: impl Display) {
+        eprintln!("{} {}", "❌".red(), text);
+    }
+
+    /// An action that was skipped because `--dry-run` was given.
+    pub fn dry_run(&self, text: impl Display) {
+        if self.quiet {
+            return;
+        }
+        println!("  {} {}", "[DRY RUN]".magenta(), text);
+    }
+
+    /// A final green, bold result line.
+    pub fn success(&self, text: impl Display) {
+        if self.quiet {
+            return;
+        }
+        println!("{}", text.to_string().green().bold());
+    }
+
+    /// A plain unadorned line, suppressed when quiet.
+    pub fn line(&self, text: impl Display) {
+        if self.quiet {
+            return;
+        }
+        println!("{text}");
+    }
+
+    /// A dimmed explanatory note, suppressed when quiet.
+    pub fn note(&self, text: impl Display) {
+        if self.quiet {
+            return;
+        }
+        println!("{}", text.to_string().dimmed());
+    }
 }
 
 /// Render a byte count in binary units, e.g. `1.4 GiB`.
@@ -136,7 +209,7 @@ pub fn table(headers: &[&str], rows: &[Vec<String>], aligns: &[Align]) {
 
     rule("┌", "┬", "┐");
 
-    let header_cells: Vec<String> = headers.iter().map(|h| h.to_string()).collect();
+    let header_cells: Vec<String> = headers.iter().map(ToString::to_string).collect();
     render_row(&header_cells);
 
     rule("├", "┼", "┤");
@@ -171,7 +244,7 @@ fn display_width(cell: &str) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::{Align, display_width, human_bytes, table};
+    use super::{Align, Printer, display_width, human_bytes, table};
 
     #[test]
     fn bytes_below_one_kib_are_shown_exactly() {
@@ -210,5 +283,36 @@ mod tests {
     fn alignment_falls_back_to_left_when_unspecified() {
         assert_eq!(Align::Left, Align::Left);
         assert_ne!(Align::Left, Align::Right);
+    }
+
+    #[test]
+    fn a_quiet_printer_is_flagged_and_a_loud_one_is_not() {
+        assert!(Printer::quiet(true).is_quiet());
+        assert!(!Printer::quiet(false).is_quiet());
+    }
+
+    #[test]
+    fn quiet_never_panics_on_any_output_kind() {
+        // Every method must be safe to call unconditionally: a new output kind
+        // added later should not have to remember the guard, because the guard
+        // is inside the helper now.
+        let printer = Printer::quiet(true);
+        printer.heading("heading");
+        printer.rule();
+        printer.step("nh", &["clean".to_string()]);
+        printer.ok("ok");
+        printer.warn("warn");
+        printer.dry_run("dry run");
+        printer.success("success");
+        printer.line("line");
+        printer.note("note");
+
+        // Failures are the documented exception and must survive `--quiet`.
+        printer.failure("failure");
+        printer.fatal("fatal");
+
+        let loud = Printer::quiet(false);
+        assert!(!loud.is_quiet());
+        loud.rule();
     }
 }

@@ -7,18 +7,15 @@
 //! reaped?
 
 use crate::cli::{DoctorArgs, ReapArgs};
+use crate::cmd;
 use crate::reap;
+use crate::space;
 use crate::tmp;
 use crate::tool;
-use crate::ui;
+use crate::ui::{self, Printer};
 use colored::Colorize;
 use std::path::PathBuf;
-use sysinfo::{Disks, System};
-
-/// Free-space fraction below which a volume is called out.
-const DISK_WARN_FRACTION: f64 = 0.10;
-/// Absolute free-space floor, independent of volume size.
-const DISK_WARN_BYTES: u64 = 20 * 1024 * 1024 * 1024;
+use sysinfo::System;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Status {
@@ -170,69 +167,49 @@ const AGENTS: &[AgentCheck] = &[
 
 /// Numeric user id, needed to address the `gui/<uid>` launchd domain.
 fn uid() -> Option<String> {
-    std::process::Command::new("id")
-        .arg("-u")
-        .output()
-        .ok()
-        .filter(|output| output.status.success())
-        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
-        .filter(|value| !value.is_empty())
+    cmd::first_line("id", &["-u"])
 }
 
-/// A mounted volume's space situation.
-#[derive(Debug, Clone)]
-pub struct Volume {
-    pub mount_point: String,
-    pub available: u64,
-    pub total: u64,
-}
-
-impl Volume {
-    /// Fraction of the volume that is free.
-    pub fn free_fraction(&self) -> f64 {
-        if self.total == 0 {
-            return 0.0;
-        }
-        self.available as f64 / self.total as f64
-    }
-
-    /// Whether this volume is running low enough to be worth reporting.
-    pub fn is_low(&self) -> bool {
-        self.free_fraction() < DISK_WARN_FRACTION || self.available < DISK_WARN_BYTES
-    }
-}
-
-/// Every writable volume, skipping APFS read-only snapshots that merely mirror
-/// the data volume.
-pub fn volumes() -> Vec<Volume> {
-    Disks::new_with_refreshed_list()
-        .list()
-        .iter()
-        .filter(|disk| !disk.is_read_only() && disk.total_space() > 0)
-        .map(|disk| Volume {
-            mount_point: disk.mount_point().display().to_string(),
-            available: disk.available_space(),
-            total: disk.total_space(),
+/// The `state = …` value from `launchctl print` output.
+///
+/// `launchctl print` exits 0 for any service launchd knows about, loaded or
+/// not, so its exit status alone cannot tell "running" from "registered but
+/// stopped". Reading `state` is what actually distinguishes them, and this runs
+/// under `--quiet` in launchd jobs, so the dump is captured rather than printed.
+fn launchd_state(target: &str) -> Option<String> {
+    cmd::capture("launchctl", &["print", target])
+        .and_then(|dump| {
+            dump.lines()
+                .filter_map(|line| line.trim().strip_prefix("state = "))
+                .map(|state| state.trim().trim_matches('"').to_string())
+                .next()
         })
-        .collect()
+        .filter(|state| !state.is_empty())
+}
+
+/// Whether a launchd agent's state means it is actually doing its job.
+///
+/// A `StartInterval` job only runs during its slot, so `waiting` is its normal
+/// resting state. `not running` on an installed agent means it was never
+/// successfully started, which is worth surfacing differently.
+fn is_live_state(state: Option<&str>) -> bool {
+    matches!(state, Some("running" | "waiting" | "active" | "kickstart"))
 }
 
 fn check_disks(report: &mut Report) {
-    for volume in volumes() {
-        let detail = format!(
-            "{} free of {} ({:.0}%)",
-            ui::human_bytes(volume.available),
-            ui::human_bytes(volume.total),
-            volume.free_fraction() * 100.0
-        );
-
+    for volume in space::volumes() {
         let status = if volume.is_low() {
             Status::Warn
         } else {
             Status::Ok
         };
 
-        report.push(Section::Disks, volume.mount_point, status, detail);
+        report.push(
+            Section::Disks,
+            volume.mount_point.clone(),
+            status,
+            volume.to_string(),
+        );
     }
 }
 
@@ -312,60 +289,50 @@ fn check_agents(report: &mut Report) {
             continue;
         }
 
-        let target = if agent.domain == "gui" {
-            match uid() {
-                Some(uid) => format!("gui/{uid}/{}", agent.label),
-                None => {
-                    report.push(
-                        Section::Agents,
-                        agent.name,
-                        Status::Warn,
-                        "installed, but the user id could not be read",
-                    );
-                    continue;
-                }
+        // `gui` agents are addressed as `gui/<uid>/<label>`, and without the
+        // numeric uid there is nothing to ask launchd about.
+        let target = match (agent.domain, uid()) {
+            ("gui", Some(uid)) => format!("gui/{uid}/{}", agent.label),
+            ("gui", None) => {
+                report.push(
+                    Section::Agents,
+                    agent.name,
+                    Status::Warn,
+                    "installed, but the user id could not be read",
+                );
+                continue;
             }
-        } else {
-            format!("{}/{}", agent.domain, agent.label)
+            (domain, _) => format!("{domain}/{}", agent.label),
         };
 
-        let loaded = std::process::Command::new("launchctl")
-            .arg("print")
-            .arg(&target)
-            .output()
-            .map(|output| output.status.success())
-            .unwrap_or(false);
+        let state = launchd_state(&target);
 
-        if loaded {
-            report.push(
-                Section::Agents,
-                agent.name,
-                Status::Ok,
-                format!("installed and loaded ({target})"),
-            );
-        } else {
-            report.push(
-                Section::Agents,
-                agent.name,
+        let (status, detail) = match (state.as_deref(), is_live_state(state.as_deref())) {
+            (Some(state), true) => (Status::Ok, format!("installed and {state} ({target})")),
+            // Registered with launchd but not running right now. For a
+            // `StartInterval` agent this is the normal state between runs, so
+            // it stays informational rather than becoming a warning.
+            (Some(state), false) => (
+                Status::Info,
+                format!("installed at {} but {state}", plist.display()),
+            ),
+            // The plist is on disk yet launchd has never heard of it: the agent
+            // was never bootstrapped, or its name does not match the label.
+            (None, _) => (
                 Status::Warn,
-                format!("installed at {} but not loaded", plist.display()),
-            );
-        }
+                format!("installed at {} but unknown to launchd", plist.display()),
+            ),
+        };
+
+        report.push(Section::Agents, agent.name, status, detail);
     }
 }
 
-fn check_reap_candidates(report: &mut Report) {
-    // The same policy modules/darwin/zombie-reaper.nix runs every 30 minutes.
-    let args = ReapArgs {
-        targets: vec!["jest-worker".into()],
-        min_age: 900,
-        min_cpu: 25.0,
-        min_memory: 0,
-        grace_period: 5,
-        dry_run: true,
-        quiet: true,
-        no_notify: true,
-    };
+fn check_reap_candidates(report: &mut Report, out: &Printer) {
+    // The policy is shared with modules/darwin/zombie-reaper.nix via
+    // `ReapArgs::background_agent_policy`, so this reports what the 30-minute
+    // agent would actually reap rather than a looser approximation of it.
+    let args = ReapArgs::background_agent_policy();
 
     let sampled = reap::sample_processes();
     let candidates = reap::find_candidates(&sampled, &args);
@@ -379,20 +346,25 @@ fn check_reap_candidates(report: &mut Report) {
             Status::Info
         },
         format!(
-            "{} process(es) match the background reaper policy",
-            candidates.len()
+            "{} process(es) match the background reaper policy (age ≥ {}s, CPU ≥ {:.0}%, memory ≥ {}, targets: {})",
+            candidates.len(),
+            args.min_age,
+            args.min_cpu,
+            ui::human_bytes(args.min_memory),
+            args.targets.len(),
         ),
     );
 
     for candidate in candidates {
-        println!(
-            "{} {} (PID {}, age {}s, CPU {:.1}%)",
+        out.line(format!(
+            "{} {} (PID {}, age {}s, CPU {:.1}%, memory {})",
             "⚠️  Would reap:".yellow(),
             candidate.name.bold(),
             candidate.pid.to_string().cyan(),
             candidate.age,
-            candidate.cpu_usage
-        );
+            candidate.cpu_usage,
+            ui::human_bytes(candidate.memory)
+        ));
     }
 }
 
@@ -487,6 +459,7 @@ fn check_mole(report: &mut Report) {
 
 /// Produce and print the report. Returns true when nothing warned or failed.
 pub fn run(args: &DoctorArgs) -> bool {
+    let out = Printer::quiet(args.quiet);
     let mut report = Report::default();
 
     report.push(
@@ -516,29 +489,25 @@ pub fn run(args: &DoctorArgs) -> bool {
     check_agents(&mut report);
 
     if args.reap_candidates {
-        check_reap_candidates(&mut report);
+        check_reap_candidates(&mut report, &out);
     }
 
-    print_report(&report, args.quiet);
+    print_report(&report, &out);
 
     let healthy = report.is_healthy();
     if !healthy {
-        eprintln!(
-            "{}",
-            format!(
-                "{} problem(s) found — see the warnings above.",
-                report.problems()
-            )
-            .red()
-            .bold()
-        );
+        out.failure(format!(
+            "{} problem(s) found — see the warnings above.",
+            report.problems()
+        ));
     }
 
     healthy || !args.strict
 }
 
-fn print_report(report: &Report, quiet: bool) {
-    ui::heading("☕ coffee doctor");
+fn print_report(report: &Report, out: &Printer) {
+    let quiet = out.is_quiet();
+    out.heading("☕ coffee doctor");
 
     for section in SECTIONS {
         let checks = report.in_section(section);
@@ -550,12 +519,12 @@ fn print_report(report: &Report, quiet: bool) {
             if quiet && !check.status.is_problem() {
                 continue;
             }
-            println!(
+            out.line(format!(
                 "{} {}: {}",
                 check.status.label(),
                 check.label,
                 check.detail.dimmed()
-            );
+            ));
         }
     }
 
@@ -563,7 +532,7 @@ fn print_report(report: &Report, quiet: bool) {
         return;
     }
 
-    ui::rule();
+    out.rule();
     let summary = format!(
         "{} passed, {} info, {} warning(s), {} failure(s)",
         report.count(Status::Ok),
@@ -573,9 +542,9 @@ fn print_report(report: &Report, quiet: bool) {
     );
 
     if report.is_healthy() {
-        ui::success(format!("✨ {summary}"));
+        out.success(format!("✨ {summary}"));
     } else {
-        println!("{}", summary.yellow());
+        out.line(summary.yellow());
     }
 }
 
@@ -599,7 +568,7 @@ fn humanize_duration(seconds: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::{Report, Section, Status, humanize_duration};
-    use crate::ui::human_bytes;
+    use crate::space;
 
     #[test]
     fn durations_drop_empty_leading_units() {
@@ -643,7 +612,23 @@ mod tests {
     }
 
     #[test]
-    fn disk_warn_threshold_renders_in_binary_units() {
-        assert_eq!(human_bytes(super::DISK_WARN_BYTES), "20.0 GiB");
+    fn a_stopped_but_registered_agent_is_not_reported_as_broken() {
+        use super::is_live_state;
+
+        // A `StartInterval` agent spends most of its life waiting. Reporting
+        // that as a warning would make `doctor --strict` permanently fail.
+        assert!(is_live_state(Some("running")));
+        assert!(is_live_state(Some("waiting")));
+        assert!(is_live_state(Some("active")));
+
+        assert!(!is_live_state(Some("not running")));
+        assert!(!is_live_state(None), "an unknown state is not a live state");
+    }
+
+    #[test]
+    fn the_disk_thresholds_are_documented_where_they_are_enforced() {
+        // These moved to `space`, next to the code that actually applies them.
+        assert_eq!(crate::ui::human_bytes(space::LOW_FREE_BYTES), "20.0 GiB");
+        assert!((space::LOW_FREE_FRACTION - 0.10).abs() < f64::EPSILON);
     }
 }

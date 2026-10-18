@@ -10,17 +10,18 @@ let
   #
   # This is a Cargo workspace: the root manifest and `Cargo.lock` live at the
   # flake root, so both must be included alongside the member's own files.
-  # The Rust package itself lives in crate/coffee, keeping Rust sources
+  # The Rust package itself lives in crates/coffee, keeping Rust sources
   # separate from the Nix packaging in pkgs/.
   src = lib.fileset.toSource {
     root = ./..;
     fileset = lib.fileset.unions [
       ../Cargo.toml
       ../Cargo.lock
-      ../crate/coffee/Cargo.toml
-      ../crate/coffee/src
+      ../crates/coffee/Cargo.toml
+      ../crates/coffee/src
     ];
   };
+
 in
 rustPlatform.buildRustPackage {
   pname = "coffee";
@@ -34,8 +35,21 @@ rustPlatform.buildRustPackage {
 
   nativeBuildInputs = [ pkgs.installShellFiles ];
 
+  # `background_policy_matches_the_launchd_agent` reads this module through
+  # CARGO_MANIFEST_DIR to cross-check the thresholds the launchd agent actually
+  # runs. `src` above does not contain it, so without this the test would skip
+  # and a drift between the Rust policy and the agent would go unnoticed — which
+  # is exactly how `doctor` came to report thresholds the agent never used.
+  #
+  # One extra file in the source closure; cheap insurance for a safety property.
+  postPatch = ''
+    mkdir -p modules/darwin
+    cp ${../modules/darwin/zombie-reaper.nix} modules/darwin/zombie-reaper.nix
+  '';
+
   # The unit tests assert the cleanup safety invariants (notably that a dry run
-  # can never schedule a destructive command), so they must run on every build.
+  # can never schedule a destructive command, and that the reaper's thresholds
+  # match the launchd agent's), so they must run on every build.
   doCheck = true;
 
   postInstall = ''

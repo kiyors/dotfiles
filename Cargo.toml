@@ -1,5 +1,5 @@
 [workspace]
-members = [ "crate/coffee" ]
+members  = [ "crates/coffee" ]
 resolver = "2"
 
 # Size and link-time optimisation. This tool is I/O bound (it spawns child
@@ -11,7 +11,45 @@ resolver = "2"
 # Profiles must be declared at the workspace root — a `[profile]` section in a
 # member manifest is ignored with a warning.
 [profile.release]
-opt-level = "z"
-lto = true
 codegen-units = 1
-strip = true
+lto           = true
+opt-level     = "z"
+strip         = true
+
+# Lints live at the workspace root so they apply to every member and cannot be
+# quietly dropped from an individual manifest. `coffee` deletes files and sends
+# signals, so the extra pedantic lints are worth the noise: the awkward
+# constructions they catch are the ones most likely to hide a real bug.
+[workspace.lints.rust]
+missing_debug_implementations = "warn"
+unsafe_code                   = "forbid"
+
+[workspace.lints.clippy]
+all      = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# `module_name_repetitions` fires on `space::Volume`, `tmp::TmpStats` and the
+# rest of a crate that names its types after their module for exactly the
+# reason the lint discourages.
+module_name_repetitions = "allow"
+# The `unwrap`-family lints fire constantly in tests, where an unwrap failure is
+# a perfectly good way to stop with a message.
+expect_used = "allow"
+unwrap_used = "allow"
+# These read as noise on a codebase this size and have no safety value here.
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+too_many_lines     = "allow"
+# Passing `&[String]` and `&&Path` by reference is the idiomatic spelling for
+# "borrowed, don't copy"; taking 8-byte `usize`s by value here would hurt the
+# call sites without helping anything.
+trivially_copy_pass_by_ref = "allow"
+# Byte counts and disk fractions are converted to `f64` only for display. No
+# precision beyond "1.0 GiB" or "40%" is ever meaningful.
+cast_precision_loss = "allow"
+# Exact float equality is the intent in the few places it appears (comparing a
+# measured fraction against its documented threshold).
+float_cmp = "allow"
+# A clap `Args` struct is a set of independent boolean flags by nature.
+struct_excessive_bools = "allow"
+# `own`/`theirs`, `a`/`b`: the names are clearer than the alternatives.
+similar_names = "allow"

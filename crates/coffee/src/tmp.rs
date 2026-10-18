@@ -5,7 +5,8 @@
 //! anything a running process might still be using. The classification lives in
 //! `is_protected` / `is_junk` so it can be unit tested directly.
 
-use crate::ui;
+use crate::space;
+use crate::ui::Printer;
 use colored::Colorize;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
@@ -98,38 +99,28 @@ pub fn scan(dir: &Path, min_age: u64) -> Vec<PathBuf> {
     junk
 }
 
-/// Recursive size of a single path. Symlinks are measured, not followed, so a
-/// link into a large tree cannot inflate the total or loop forever.
-fn path_size(path: &Path) -> u64 {
-    let Ok(meta) = std::fs::symlink_metadata(path) else {
-        return 0;
-    };
-
-    if !meta.is_dir() || meta.file_type().is_symlink() {
-        return meta.len();
-    }
-
-    std::fs::read_dir(path)
-        .map(|entries| {
-            entries
-                .flatten()
-                .map(|entry| path_size(&entry.path()))
-                .sum::<u64>()
-        })
-        .unwrap_or(0)
-}
-
 /// Total size of `paths`, ignoring anything that cannot be stat'ed.
 pub fn total_size(paths: &[PathBuf]) -> u64 {
-    paths.iter().map(|path| path_size(path)).sum()
+    paths.iter().map(|path| space::dir_size(path)).sum()
 }
 
 /// Outcome of a `/tmp` sweep, used for the cleanup stats table.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct TmpStats {
     pub removed: usize,
+    /// Entries a `--dry-run` would have removed. Always 0 on a live run.
     pub skipped: usize,
     pub bytes: u64,
+}
+
+impl TmpStats {
+    /// How many entries this sweep accounted for, live or previewed.
+    ///
+    /// A dry run increments `skipped` and a live run increments `removed`, so
+    /// the summary table can report one count without caring which mode ran.
+    pub fn accounted(&self) -> usize {
+        self.removed + self.skipped
+    }
 }
 
 /// Remove stale clutter from `/tmp`.
@@ -138,16 +129,14 @@ pub struct TmpStats {
 /// in use; `0` removes the guard. Returns false only when `/tmp` is unreadable,
 /// which is the one failure worth surfacing.
 pub fn clean(dry_run: bool, quiet: bool, min_age: u64) -> TmpStats {
+    let out = Printer::quiet(quiet);
     let mut stats = TmpStats::default();
     let tmp = Path::new("/tmp");
-    if !tmp.exists() {
-        return stats;
-    }
 
+    // `read_dir` failing already covers "/tmp is missing"; an `exists()` probe
+    // first would be a second syscall asking the same question.
     if std::fs::read_dir(tmp).is_err() {
-        if !quiet {
-            ui::failure("Failed to read /tmp");
-        }
+        out.failure("Failed to read /tmp");
         return stats;
     }
 
@@ -155,41 +144,38 @@ pub fn clean(dry_run: bool, quiet: bool, min_age: u64) -> TmpStats {
         let bytes = total_size(std::slice::from_ref(&path));
 
         if dry_run {
-            if !quiet {
-                ui::dry_run(format!("Would remove {}", path.display()));
-            }
+            out.dry_run(format!("Would remove {}", path.display()));
             stats.skipped += 1;
             stats.bytes += bytes;
             continue;
         }
 
-        let success = if path.is_dir() {
-            std::fs::remove_dir_all(&path).is_ok()
+        // `remove_dir_all` on a file and `remove_file` on a directory both fail,
+        // and `/tmp` holds both, so pick by the type we just measured.
+        let removed = if path.is_dir() {
+            std::fs::remove_dir_all(&path)
         } else {
-            std::fs::remove_file(&path).is_ok()
-        };
+            std::fs::remove_file(&path)
+        }
+        .is_ok();
 
-        if success {
-            if !quiet {
-                ui::ok(format!("Removed {}", path.display()));
-            }
+        if removed {
+            out.ok(format!("Removed {}", path.display()));
             stats.removed += 1;
             stats.bytes += bytes;
-        } else if !quiet {
-            ui::failure(format!("Failed to remove {}", path.display()));
+        } else {
+            out.failure(format!("Failed to remove {}", path.display()));
         }
     }
 
-    if !quiet && stats.removed > 0 {
-        let action = if dry_run { "Would clean" } else { "Cleaned" };
-        println!(
-            "  {} {} {} stale /tmp item(s)",
+    if stats.removed > 0 {
+        out.line(format!(
+            "  {} Cleaned {} stale /tmp item(s)",
             "✨".green(),
-            action,
             stats.removed
-        );
-    } else if !quiet && dry_run {
-        println!("  {} /tmp already clean", "✨".green());
+        ));
+    } else if dry_run {
+        out.line(format!("  {} /tmp already clean", "✨".green()));
     }
 
     stats
@@ -197,9 +183,32 @@ pub fn clean(dry_run: bool, quiet: bool, min_age: u64) -> TmpStats {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_junk, is_protected, scan};
+    use super::{TmpStats, is_junk, is_protected, scan};
     use std::path::PathBuf;
     use std::time::{Duration, SystemTime};
+
+    /// Comfortably older than the 24h guard, spelled so the duration lint does
+    /// not rewrite it into something harder to read.
+    const TWO_DAYS: u64 = 2 * 24 * 60 * 60;
+
+    #[test]
+    fn accounted_reports_one_count_for_live_runs_and_previews() {
+        let live = TmpStats {
+            removed: 3,
+            ..Default::default()
+        };
+        assert_eq!(live.accounted(), 3);
+
+        // A dry run never increments `removed`, so the summary has to add the
+        // two counters together to describe the same sweep either way.
+        let preview = TmpStats {
+            skipped: 3,
+            ..Default::default()
+        };
+        assert_eq!(preview.accounted(), 3);
+
+        assert_eq!(TmpStats::default().accounted(), 0);
+    }
 
     /// A scratch directory unique to one test.
     fn temp_dir(name: &str) -> PathBuf {
@@ -213,7 +222,7 @@ mod tests {
         dir
     }
 
-    fn names_of(paths: Vec<PathBuf>) -> Vec<String> {
+    fn names_of(paths: &[PathBuf]) -> Vec<String> {
         paths
             .iter()
             .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
@@ -291,7 +300,7 @@ mod tests {
         std::fs::write(dir.join("keep-me.txt"), b"x").expect("write keeper");
         std::fs::write(dir.join("listener.sock"), b"x").expect("write socket");
 
-        let names = names_of(scan(&dir, 0));
+        let names = names_of(&scan(&dir, 0));
         assert_eq!(names, ["dbg.rs"]);
 
         std::fs::remove_dir_all(&dir).expect("clean up temp dir");
@@ -306,11 +315,11 @@ mod tests {
         std::fs::write(dir.join("nix-develop-abc123"), b"x").expect("write fresh scratch dir");
 
         assert!(
-            names_of(scan(&dir, 86_400)).is_empty(),
+            names_of(&scan(&dir, 86_400)).is_empty(),
             "fresh entries must survive a 24h age guard"
         );
         assert_eq!(
-            names_of(scan(&dir, 0)),
+            names_of(&scan(&dir, 0)),
             ["nix-develop-abc123"],
             "a zero guard disables the age check"
         );
@@ -324,9 +333,9 @@ mod tests {
 
         let old = dir.join("nix-shell.9f8e");
         std::fs::write(&old, b"x").expect("write old scratch entry");
-        backdate(&old, Duration::from_secs(2 * 86_400));
+        backdate(&old, Duration::from_secs(TWO_DAYS));
 
-        assert_eq!(names_of(scan(&dir, 86_400)), ["nix-shell.9f8e"]);
+        assert_eq!(names_of(&scan(&dir, 86_400)), ["nix-shell.9f8e"]);
 
         std::fs::remove_dir_all(&dir).expect("clean up temp dir");
     }
@@ -337,7 +346,7 @@ mod tests {
 
         let socket = dir.join("system-cleanup.sock");
         std::fs::write(&socket, b"x").expect("write protected file");
-        backdate(&socket, Duration::from_secs(2 * 86_400));
+        backdate(&socket, Duration::from_secs(TWO_DAYS));
 
         assert!(scan(&dir, 86_400).is_empty());
 
@@ -351,7 +360,7 @@ mod tests {
 
         std::fs::write(dir.join("dbg.rs"), b"x").expect("write junk file");
 
-        assert_eq!(names_of(scan(&dir, u64::MAX)), ["dbg.rs"]);
+        assert_eq!(names_of(&scan(&dir, u64::MAX)), ["dbg.rs"]);
 
         std::fs::remove_dir_all(&dir).expect("clean up temp dir");
     }
