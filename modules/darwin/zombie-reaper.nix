@@ -14,18 +14,35 @@
       # additionally refuses to signal anything running out of /System, /usr or
       # /sbin, and refuses well-known daemon names, so a mistyped target here
       # degrades to "match nothing" rather than "kill something important".
+      # Every flag MUST be joined with a trailing backslash.
+      #
+      # launchd runs this whole block as `sh -c "<one string>"`, and a newline
+      # inside that string ENDS the command. Written with bare newlines, only
+      # `reap-zombies` reached the binary: every flag below it became its own
+      # shell command and died with "command not found" (buried nowhere, since
+      # stderr only captured those), so the agent silently ran with clap's
+      # DEFAULTS — reaping any orphaned `jest-worker` every 30 minutes regardless
+      # of CPU or age, and ignoring `--quiet`, which is why the log filled up.
+      #
+      # `cli::tests::every_agent_flag_survives_the_shell_invocation` re-runs this
+      # block through /bin/sh and fails if a flag ever stops arriving, so a
+      # reformat cannot silently reintroduce it. `scripts/verify-reaper.sh`
+      # checks the same thing on the live agent.
+      #
+      # The `system-cleanup` daemon below is written the same way, for the same
+      # reason.
       command = ''
-        ${pkgs.coffee}/bin/coffee reap-zombies
-        --quiet
-        --min-age 900
-        --min-cpu 25
-        --min-memory 1G
-        --grace-period 5
-        -t jest-worker
-        -t typescript/lib/tsc.js
-        -t node_modules/.bin/tsc
-        -t esbuild
-        -t rust-analyzer
+        ${pkgs.coffee}/bin/coffee reap-zombies \
+          --quiet \
+          --min-age 900 \
+          --min-cpu 25 \
+          --min-memory 1G \
+          --grace-period 5 \
+          -t jest-worker \
+          -t typescript/lib/tsc.js \
+          -t node_modules/.bin/tsc \
+          -t esbuild \
+          -t rust-analyzer
       '';
 
       serviceConfig = {
