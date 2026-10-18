@@ -348,7 +348,9 @@ mod tests {
         std::fs::write(&socket, b"x").expect("write protected file");
         backdate(&socket, Duration::from_secs(TWO_DAYS));
 
-        assert!(scan(&dir, 86_400).is_empty());
+        // Compared rather than `assert!(is_empty())` so a failure names the
+        // entries that leaked past the protection check.
+        assert_eq!(scan(&dir, 86_400), [] as [std::path::PathBuf; 0]);
 
         std::fs::remove_dir_all(&dir).expect("clean up temp dir");
     }

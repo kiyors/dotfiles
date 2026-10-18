@@ -622,7 +622,9 @@ mod tests {
             ancestors.contains(&sysinfo::Pid::from_u32(std::process::id())),
             "the reaper's own PID must be protected"
         );
-        assert!(!ancestors.is_empty());
+        // Compared rather than `assert!(!is_empty())` so a failure prints the
+        // chain that was built, which is what makes the failure diagnosable.
+        assert_ne!(ancestors, [] as [sysinfo::Pid; 0]);
         assert!(
             !ancestors.windows(2).any(|pair| pair[0] == pair[1]),
             "the ancestor chain must not contain cycles"
