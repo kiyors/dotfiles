@@ -12,6 +12,11 @@ let
   # flake root, so both must be included alongside the member's own files.
   # The Rust package itself lives in crates/coffee, keeping Rust sources
   # separate from the Nix packaging in pkgs/.
+  #
+  # The root manifest lists every member, and cargo refuses to load a workspace
+  # whose members are missing from disk, so sibling members are included even
+  # though nothing here uses them. Without crates/gitprompt/Cargo.toml this
+  # build fails with "failed to load manifest for workspace member".
   src = lib.fileset.toSource {
     root = ./..;
     fileset = lib.fileset.unions [
@@ -19,6 +24,8 @@ let
       ../Cargo.lock
       ../crates/coffee/Cargo.toml
       ../crates/coffee/src
+      ../crates/gitprompt/Cargo.toml
+      ../crates/gitprompt/src
     ];
   };
 

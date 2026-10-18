@@ -7,6 +7,7 @@
   spotiflac = pkgs.callPackage ./spotiflac.nix { };
   superCmd = pkgs.callPackage ./supercmd.nix { };
   coffee = pkgs.callPackage ./coffee.nix { };
+  gitprompt = pkgs.callPackage ./gitprompt.nix { };
   recordly = pkgs.callPackage ./recordly.nix { };
   kache = pkgs.callPackage ./kache.nix { };
   # tinycast = pkgs.callPackage ./tinycast.nix { };

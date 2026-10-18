@@ -1,26 +1,33 @@
-name: coffee
+name: rust
 
 on:
   push:
     paths:
-      - "crates/coffee/**"
+      - "crates/**"
+      - "pkgs/coffee.nix"
+      - "pkgs/gitprompt.nix"
       - "modules/darwin/zombie-reaper.nix"
+      - "config/zsh/**"
       - "Cargo.toml"
       - "Cargo.lock"
-      - ".github/workflows/coffee.yml"
+      - ".github/workflows/rust.yml"
   pull_request:
     paths:
-      - "crates/coffee/**"
+      - "crates/**"
+      - "pkgs/coffee.nix"
+      - "pkgs/gitprompt.nix"
       - "modules/darwin/zombie-reaper.nix"
+      - "config/zsh/**"
       - "Cargo.toml"
       - "Cargo.lock"
-      - ".github/workflows/coffee.yml"
+      - ".github/workflows/rust.yml"
 
-# `crates/coffee` is a member of a virtual workspace whose root manifest is two
-# levels up, so every cargo command runs from the member directory.
+# Both crates are members of a virtual workspace whose root manifest is two
+# levels up, so every cargo command runs from the repository root with
+# `--workspace` rather than from a member directory.
 defaults:
   run:
-    working-directory: crates/coffee
+    working-directory: .
 
 jobs:
   check:
@@ -40,8 +47,8 @@ jobs:
       - name: Format
         run: cargo fmt --all --check
 
-      # `--workspace` because this is a member of a virtual workspace, and the
-      # lint set lives in the root manifest rather than the member's.
+      # `--workspace` because these are members of a virtual workspace, and the
+      # lint set lives in the root manifest rather than in a member's.
       - name: Clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
@@ -49,5 +56,9 @@ jobs:
       # modules/darwin/zombie-reaper.nix via CARGO_MANIFEST_DIR. The checkout
       # provides that file here, but the Nix build sandbox does not — which is
       # why this module is in the path filter above.
+      #
+      # gitprompt's tests need `git` on PATH for the same reason: they build
+      # real repositories, and without it every dirty-state test silently
+      # returns early and passes without asserting anything.
       - name: Test
         run: cargo test --workspace

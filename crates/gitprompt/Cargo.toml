@@ -1,0 +1,18 @@
+[package]
+name        = "gitprompt"
+version     = "0.1.0"
+edition     = "2024"
+description = "Fast git branch and dirty indicator for shell prompts"
+license     = "MIT"
+repository  = "https://github.com/gaurav/dotfiles"
+
+[lints]
+workspace = true
+
+# No dependencies on purpose.
+#
+# This binary runs on every prompt draw, so start-up cost is the whole game. A
+# single `clap` dependency measurably adds more to the process than the work
+# being done, and the only flag it exposes (`--dirty-only`) needs nothing more
+# than `std::env::args`.
+[dependencies]

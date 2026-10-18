@@ -1,5 +1,5 @@
 [workspace]
-members  = [ "crates/coffee" ]
+members  = [ "crates/coffee", "crates/gitprompt" ]
 resolver = "2"
 
 # Size and link-time optimisation. This tool is I/O bound (it spawns child
