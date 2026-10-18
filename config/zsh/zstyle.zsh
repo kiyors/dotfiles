@@ -45,8 +45,13 @@ bindkey '^Xa' alias-expension
 zstyle ':completion:alias-expension:*' completer _expand_alias
 
 # fzf-tab Previews
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
-zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+#
+# `eza` rather than `ls`: the `ls` alias points at eza, and eza's `--color`
+# takes a value, so the old `ls --color $realpath` made every `cd <TAB>` show
+# `error: invalid value '/etc/hosts' for '--color [<WHEN>]'` in the preview.
+# `--color=always` uses the `=` form so the path cannot be read as the argument.
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza --color=always --group-directories-first $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza --color=always --group-directories-first $realpath'
 
 # SSH Hosts
 zstyle -e ':completion:*:(ssh|scp|sftp|rsh|rsync):hosts' hosts 'reply=(${=${${(f)"$(cat {/etc/ssh_,~/.ssh/known_}hosts(|2)(N) /dev/null)"}%%[# ]*}//,/ })'

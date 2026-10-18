@@ -122,9 +122,23 @@ alias bkhist='backup-shell-history'
 #
 # `gitprompt` prints nothing outside a repository, which is exactly what a
 # prompt substitution wants, so no guard is needed here.
+#
+# stderr is deliberately NOT discarded. When the binary is missing — a
+# non-Nix user who has not run `cargo install --path crates/gitprompt`, or a
+# garbage-collected store path — the failure is otherwise invisible: `$( )`
+# throws the exit status away and an empty result is indistinguishable from
+# "not in a repository". One clear line at startup beats a silently absent
+# prompt segment.
 function git_prompt_info() {
-  command gitprompt 2> /dev/null
+  if (( $+commands[gitprompt] )); then
+    command gitprompt
+  fi
 }
+
+# Report a missing binary once per shell, rather than on every prompt draw.
+if (( ! $+commands[gitprompt] )); then
+  print -u2 "zsh: gitprompt not found — git prompt disabled. Install with: cargo install --path crates/gitprompt"
+fi
 
 function portkill() {
   if [ -z "$1" ]; then

@@ -13,11 +13,30 @@ function _cached_eval {
   local cache_file="$ZSH_CACHE_DIR/$name.zsh"
   local bin_path="${commands[$1]:-}"
 
-  # Rebuild cache if missing or if the binary is newer
-  if [[ ! -f "$cache_file" ]] || [[ -n "$bin_path" && "$bin_path" -nt "$cache_file" ]]; then
-    "$@" > "$cache_file" 2>/dev/null
+  # Regenerate only when the binary is present. A cache produced by an earlier
+  # run can reference the tool it was generated from (atuin's does, via
+  # `ATUIN_SESSION=$(atuin uuid)`), so sourcing it after the tool is
+  # uninstalled printed `command not found` on every shell start.
+  #
+  # An existing, valid cache is still sourced when the binary is missing —
+  # most of these files (fzf keybindings, zoxide init, direnv hook) are
+  # still useful — so this is not an early return, only a regeneration guard.
+  if [[ -n "$bin_path" ]] && { [[ ! -s "$cache_file" ]] || [[ "$bin_path" -nt "$cache_file" ]]; }; then
+    # Generation is atomic and validated: the output goes to a temporary file
+    # that is only moved into place if it is non-empty. A plain `>` would create
+    # a zero-byte cache on a failed run, and since `-s` would then be false
+    # while `-f` stayed true, the empty file would never be retried and the
+    # integration would be disabled until someone deleted it by hand.
+    local tmp="$cache_file.tmp"
+    if "$@" > "$tmp" 2>/dev/null && [[ -s "$tmp" ]]; then
+      mv "$tmp" "$cache_file"
+    else
+      rm -f "$tmp"
+    fi
   fi
-  source "$cache_file"
+
+  [[ -s "$cache_file" ]] && source "$cache_file"
+  return 0
 }
 
 # Catppuccin theme (must be sourced BEFORE syntax-highlighting loads)
@@ -79,6 +98,15 @@ for profile in ${(z)NIX_PROFILES}; do
 done
 fpath=($fpath(N/))
 
+# zstyle before compinit: the completion system reads these settings as it is
+# initialised, and sourcing them afterwards left them applying only to
+# completions that had not yet been set up.
+#
+# Note that `cache-path` here is the *results* cache, not the compdump. The
+# dump location is chosen by zsh itself (currently ~/.zcompdump); moving it
+# would mean setting ZSH_COMPDUMP.
+source "$HOME/.config/zsh/zstyle.zsh"
+
 # compinit (fast: -C uses cached dump, skips re-scan)
 autoload -Uz compinit && compinit -C
 
@@ -91,21 +119,27 @@ if (( $+functions[_coffee] )); then
   compdef _coffee co
 fi
 
-_cached_eval carapace carapace _carapace
+# carapace's cache also shells out to `carapace` while being sourced, for the
+# same reason atuin's does below.
+if (( $+commands[carapace] )); then
+  _cached_eval carapace carapace _carapace
+fi
 
 # Keybindings
 # Atuin bindings (must be in array BEFORE vi-mode init runs)
-zvm_after_init_commands+=('bindkey -M viins "^k" atuin-up-search')
-zvm_after_init_commands+=('bindkey -M vicmd "^k" atuin-up-search')
-zvm_after_init_commands+=('bindkey -M viins "^r" atuin-search')
-zvm_after_init_commands+=('bindkey -M vicmd "^r" atuin-search')
+# Registered only when atuin is present: a widget backed by a missing binary
+# fails on the keystroke rather than at startup.
+if (( $+commands[atuin] )); then
+  zvm_after_init_commands+=('bindkey -M viins "^k" atuin-up-search')
+  zvm_after_init_commands+=('bindkey -M vicmd "^k" atuin-up-search')
+  zvm_after_init_commands+=('bindkey -M viins "^r" atuin-search')
+  zvm_after_init_commands+=('bindkey -M vicmd "^r" atuin-search')
+fi
 # Source remaining keybindings after vi-mode is ready
 zvm_after_init_commands+=('source "$HOME/.config/zsh/Keybindings.zsh"')
 zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
-# zstyle (completion styling)
-source "$HOME/.config/zsh/zstyle.zsh"
-
+# zstyle.zsh is sourced above, before compinit. Not sourced again here.
 
 # Native Prompt
 autoload -U colors && colors
@@ -119,6 +153,15 @@ PROMPT+=' $(git_prompt_info)'
 # escape sequences are pinned by tests.
 
 # Shell integrations (sheldon already sourced from cache above — do not re-source)
+#
+# atuin is called out because its generated cache runs the binary while it is
+# being sourced (`export ATUIN_SESSION=$(atuin uuid)`), so an existing cache
+# still errors after atuin is uninstalled. fzf, zoxide and direnv emit pure
+# shell and are safe to source either way. The check is `command -v`, not the
+# cache file, because the cache outlives the tool it came from.
+if (( $+commands[atuin] )); then
+  _cached_eval atuin atuin init zsh --disable-up-arrow
+fi
+
 _cached_eval fzf fzf --zsh
 _cached_eval zoxide zoxide init --cmd cd zsh
-_cached_eval atuin atuin init zsh --disable-up-arrow
