@@ -36,6 +36,15 @@ rustPlatform.buildRustPackage {
 
   inherit src;
 
+  # Build only this crate's binary.
+  #
+  # `cargo build` with no target builds every workspace member, so gitprompt's
+  # binary was being installed into coffee's output as well. Both packages land
+  # on `PATH`, and whichever was linked first won — which meant an update to
+  # gitprompt could silently leave a stale copy being used instead, since
+  # nothing about coffee's own rebuild changes gitprompt's binary.
+  buildAndTestSubdir = "crates/coffee";
+
   cargoLock = {
     lockFile = ./../Cargo.lock;
   };

@@ -32,6 +32,10 @@ rustPlatform.buildRustPackage {
 
   inherit src;
 
+  # Build only this crate's binary, for the same reason as pkgs/coffee.nix: a
+  # bare `cargo build` would also produce coffee and install it here.
+  buildAndTestSubdir = "crates/gitprompt";
+
   cargoLock = {
     lockFile = ./../Cargo.lock;
   };
