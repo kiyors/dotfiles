@@ -23,6 +23,13 @@ A candidate is only signalled when every one of these holds:
 - it is older than `--min-age` **and** either using more than `--min-cpu` CPU or
   holding more than `--min-memory`.
 
+A threshold of `0` means *that check is switched off*, not "everything passes
+it". This distinction matters: the CPU and memory checks are alternatives
+combined with OR, so treating an unset threshold as `>= 0` — which is always
+true — would silently make the other threshold dead. With `--min-memory 0`, the
+default, `--min-cpu` would then do nothing at all and the policy would collapse
+to "orphaned and target-matched", taking idle long-lived dev servers with it.
+
 The provenance and name checks mean a mistyped target degrades to "match
 nothing" rather than "signal something important". For example
 `coffee reap-zombies -t launchd` matches nothing at all.
@@ -153,8 +160,9 @@ co clean -d
 # Deduplicate the Nix store only:
 co clean --optimise
 
-# Everything at once: no generation retention, project artifacts, global
-# garbage collection, store deduplication and /tmp. Destructive and slow:
+# Everything at once: only the current generation of each profile survives,
+# plus project artifacts, global garbage collection, store deduplication and
+# /tmp. Destructive and slow:
 co clean --all --dry-run
 co clean --all
 
@@ -210,6 +218,9 @@ the whole run, so it also covers `nh`, `mo` and `brew`. In `--dry-run` the total
 row is omitted, since no space was actually freed. Use `--no-stats` to suppress
 the table, or `--quiet`, which already implies it.
 
+`--quiet` suppresses *routine* output only. Failures and fatals still go to
+stderr, because a swallowed error in a launchd log is worse than a noisy one.
+
 `coffee space` answers "what is still using space" by listing the largest
 directories:
 
@@ -227,6 +238,10 @@ $ coffee space --top 8
 
 Pass paths to inspect something specific, e.g. `coffee space ~/workspace`.
 
+`--top` is a limit on the whole report, not per scanned directory, so the
+"across N entries shown" line is always the exact sum of the rows in the table
+above it.
+
 ## 4. Diagnostics (`coffee doctor`)
 `coffee doctor` is read-only and changes nothing. It reports:
 
@@ -234,12 +249,71 @@ Pass paths to inspect something specific, e.g. `coffee space ~/workspace`.
 - whether `nix`, `nh`, `mo`, `brew` and `launchctl` are on `PATH`;
 - the Mole whitelist contents and the `mo purge` scan roots;
 - stale `/tmp` items, and how many are old enough for `--min-age` to remove; and
-- whether both launchd jobs are installed *and* loaded.
+- whether both launchd jobs are installed *and* registered with launchd.
 
 Use `--reap-candidates` to also list the processes `reap-zombies` would target
 right now, and `--strict` to exit non-zero when anything warned or failed.
 
-## 5. Shell completion
+`--reap-candidates` reports against the *same* policy the 30-minute agent runs,
+not a looser approximation: `ReapArgs::background_agent_policy` in
+`crates/coffee/src/cli.rs` holds the thresholds, and a test cross-checks them
+against `modules/darwin/zombie-reaper.nix` so the two cannot silently drift
+apart. If you change one, change the other — `cargo test` will say so.
+
+An installed agent that launchd knows about but is not currently running is
+reported as informational, not a warning: a `StartInterval` job spends almost all
+its life waiting between runs. Only an agent launchd has never heard of is a
+warning, because that means it was never bootstrapped.
+
+## 5. Verifying the background agents
+
+Run the checker after any change to a launchd job, or when you want to confirm
+the agents are still doing their job:
+
+```sh
+./scripts/verify-reaper.sh
+```
+
+It checks that the reaper is registered, that it has run and exited cleanly,
+that **the flags the agent actually passes are the intended ones**, that
+`--quiet` is honoured by the binary it points at, that the run count is keeping
+up with the interval, and that stderr is empty. It exits non-zero on failure, so
+it is usable from CI or a pre-commit hook.
+
+The flag check is the important one. launchd runs the agent's command block as a
+single `sh -c` string, and a newline inside that string ends the command — so a
+block written with bare newlines instead of `\` continuations passes only the
+subcommand, drops every flag on the floor, and the agent runs with clap's
+defaults without saying so. That is not hypothetical: the reaper was configured
+that way, so `--min-cpu 25` and `--min-memory 1G` never took effect and it
+reaped any orphaned `jest-worker` every 30 minutes. Two guards now prevent a
+regression:
+
+- `cli::tests::every_agent_flag_survives_the_shell_invocation` replays the block
+  through `/bin/sh` and fails if any flag fails to arrive;
+- `background_policy_matches_the_launchd_agent` compares the thresholds in
+  `ReapArgs::background_agent_policy` against the values in the Nix file.
+
+To force a run by hand:
+
+```sh
+launchctl kickstart gui/$(id -u)/org.nixos.zombie-reaper
+```
+
+This blocks for up to `minimum runtime` (600s), because launchd holds the slot
+open after a run — that is normal, not a hang. To watch what it would do without
+signalling anything:
+
+```sh
+coffee reap-zombies --dry-run          # same flags the agent uses
+coffee doctor --reap-candidates         # reports against the agent's policy
+```
+
+`/tmp/zombie-reaper.err` should stay empty; a non-empty stderr means a tool is
+missing or failing. `/tmp/zombie-reaper.out` only grows when the agent finds
+candidates to reap, because a normal run is `--quiet`.
+
+## 6. Shell completion
 
 `coffee` is installed as `coffee` and `co`, and the package generates zsh, bash
 and fish completions at build time. After a `darwin-rebuild`, both names complete
