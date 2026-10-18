@@ -15,7 +15,11 @@ myLib.mkHomeModule {
       enable = true;
       clean = {
         enable = true;
-        extraArgs = "--delete-older-than 0d --gc";
+        # No extraArgs: on darwin the home-manager module passes the whole
+        # string as a single argv element, so a value like
+        # "--delete-older-than 0d --gc" reached nh as one bogus argument (and
+        # neither flag exists on `nh clean`). nh's defaults already keep the
+        # current generation of each user profile and run the store gc.
       };
       flake = "${config.home.homeDirectory}/dotfiles";
     };
